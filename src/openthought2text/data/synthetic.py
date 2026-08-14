@@ -95,10 +95,14 @@ class SyntheticNeuralTextAdapter:
     def _signal_path(self, root: Path, subject_index: int) -> Path:
         return root / "signals" / f"subject-{subject_index:02d}.json"
 
+    @staticmethod
+    def _signal_uri(subject_index: int) -> str:
+        return str(Path("signals") / f"subject-{subject_index:02d}.json")
+
     def _signal_reference(self, root: Path, subject_index: int) -> SignalReference:
         content = json.dumps(self._signal_values(subject_index), separators=(",", ":"))
         return SignalReference(
-            uri=str(self._signal_path(root, subject_index)),
+            uri=self._signal_uri(subject_index),
             recording_id=f"synthetic-recording-{subject_index:02d}",
             sampling_rate_hz=self.sample_rate_hz,
             channel_count=2,
@@ -169,7 +173,7 @@ class SyntheticNeuralTextAdapter:
             signal_path = self._signal_path(root, subject_index)
             signal_path.parent.mkdir(parents=True, exist_ok=True)
             signal_path.write_text(
-                json.dumps(self._signal_values(subject_index), separators=(",", ":")) + "\n",
+                json.dumps(self._signal_values(subject_index), separators=(",", ":")),
                 encoding="utf-8",
             )
         manifest = self.discover(str(root))
@@ -184,7 +188,7 @@ class SyntheticNeuralTextAdapter:
         missing: set[Path] = set()
         invalid: set[Path] = set()
         for sample in manifest.samples:
-            signal_path = Path(sample.signal.uri)
+            signal_path = root / sample.signal.uri
             if not signal_path.is_file():
                 missing.add(signal_path)
                 continue

@@ -62,6 +62,11 @@ from .tokenizer import (
     tokenize_text,
     write_train_text_tokenizer,
 )
+from .json_signals import (
+    ManifestSplit,
+    load_json_tensor_samples,
+    select_split_samples,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -71,6 +76,7 @@ __all__ = [
     "DatasetAdapter",
     "DatasetManifest",
     "InformationAccess",
+    "ManifestSplit",
     "Modality",
     "NeuralTextSample",
     "NeuralTensorBatch",
@@ -106,10 +112,12 @@ __all__ = [
     "fit_train_channel_normalizer",
     "fit_train_text_tokenizer",
     "load_manifest",
+    "load_json_tensor_samples",
     "load_prepared_artifact_manifest",
     "load_train_text_tokenizer",
     "tensor_checksum",
     "tokenize_text",
+    "select_split_samples",
     "write_manifest",
     "write_prepared_artifact_manifest",
     "write_train_text_tokenizer",
