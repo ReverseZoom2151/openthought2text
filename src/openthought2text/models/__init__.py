@@ -41,6 +41,12 @@ from .heads import (
 )
 from .model import NeuralToTextGenerationOutput, NeuralToTextModel, NeuralToTextTrainingOutput
 from .montage import GraphMontageAdapter
+from .masked_token_pretraining import (
+    MaskedNeuralTokenConfig,
+    MaskedNeuralTokenObjectiveOutput,
+    MaskedNeuralTokenPredictionObjective,
+    select_mask_positions,
+)
 from .residual_quantizer import (
     ResidualVectorQuantizer,
     ResidualVectorQuantizerConfig,
@@ -82,6 +88,9 @@ __all__ = [
     "NeuralRepresentationBottleneckOutput",
     "NeuralVectorQuantizer",
     "MaskedCandidateRankingLoss",
+    "MaskedNeuralTokenConfig",
+    "MaskedNeuralTokenObjectiveOutput",
+    "MaskedNeuralTokenPredictionObjective",
     "ResidualVectorQuantizer",
     "ResidualVectorQuantizerConfig",
     "ResidualVectorQuantizerOutput",
@@ -102,5 +111,6 @@ __all__ = [
     "checkpoint_architecture_metadata",
     "describe_model_architecture",
     "greedy_ctc_decode",
+    "select_mask_positions",
     "validate_checkpoint_architecture",
 ]
