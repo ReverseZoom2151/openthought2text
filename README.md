@@ -93,6 +93,10 @@ ott evaluate compare-controls --run /path/to/run \
 python examples/synthetic_workflow.py
 python examples/synthetic_experiment.py
 
+# Optional synthetic-artifact visualization walkthrough (requires Jupyter).
+python -m jupyter nbconvert --execute --to notebook --inplace \
+  examples/notebooks/synthetic_artifact_sanity.ipynb
+
 # Open `examples/synthetic_demo.html` in a browser. It never loads a participant
 # recording or trained model.
 
