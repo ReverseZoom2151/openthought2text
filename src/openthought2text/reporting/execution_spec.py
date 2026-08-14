@@ -100,6 +100,8 @@ class TargetFreeEvaluationSpec:
                 tuple(data["required_output_artifacts"]),
                 str(data["schema_version"]),
             )
+        except ProvenanceError:
+            raise
         except (KeyError, TypeError, ValueError) as error:
             raise ProvenanceError("invalid target-free evaluation spec schema") from error
         if data.get("binding_sha256") != spec.binding_sha256:
