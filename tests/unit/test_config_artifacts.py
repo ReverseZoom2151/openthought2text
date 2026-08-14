@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from pathlib import Path
 
 from openthought2text.config import config_checksum, load_json_config, resolve_named_configs
 
@@ -24,3 +25,11 @@ def test_config_rejects_duplicate_or_empty_objects(tmp_path) -> None:
     empty.write_text("{}", encoding="utf-8")
     with pytest.raises(ValueError, match="non-empty"):
         load_json_config(empty)
+
+
+def test_checked_in_configuration_artifacts_are_strict_json() -> None:
+    root = Path(__file__).resolve().parents[2]
+    files = sorted((root / "configs").glob("*/*.json"))
+    assert files
+    checksums = [config_checksum(load_json_config(path)) for path in files]
+    assert len(checksums) == len(set(checksums))
