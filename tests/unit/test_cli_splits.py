@@ -113,3 +113,11 @@ def test_cli_refuses_unconfigured_checkpoint_generation_audit(tmp_path) -> None:
     with pytest.raises(SystemExit) as error:
         main(["evaluate", "audit-generation", "--checkpoint", str(tmp_path / "untrusted.pt")])
     assert error.value.code == 2
+
+
+def test_cli_execution_spec_validation_fails_without_loading_models_or_data(tmp_path) -> None:
+    spec = tmp_path / "invalid-spec.json"
+    spec.write_text("{}", encoding="utf-8")
+    with pytest.raises(SystemExit) as error:
+        main(["report", "validate-execution-spec", "--spec", str(spec)])
+    assert error.value.code == 2

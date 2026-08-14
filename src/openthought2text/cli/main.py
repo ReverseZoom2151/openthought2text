@@ -38,6 +38,7 @@ from openthought2text.evaluation import (
     write_prediction_jsonl,
 )
 from openthought2text.models import NeuralToTextModelConfig, build_neural_to_text_model
+from openthought2text.reporting import validate_target_free_spec_file
 from openthought2text.training import (
     CheckpointMetadata,
     build_training_inputs,
@@ -117,6 +118,11 @@ def build_parser() -> argparse.ArgumentParser:
     report_subparsers = report.add_subparsers(dest="report_command", required=True)
     build = report_subparsers.add_parser("build")
     build.add_argument("--report", type=_path, required=True)
+    validate_spec = report_subparsers.add_parser(
+        "validate-execution-spec",
+        help="Validate a target-free control-plan specification without executing a model",
+    )
+    validate_spec.add_argument("--spec", type=_path, required=True)
     return parser
 
 
@@ -447,6 +453,10 @@ def _run_evaluation(args: argparse.Namespace) -> int:
 
 
 def _run_report(args: argparse.Namespace) -> int:
+    if args.report_command == "validate-execution-spec":
+        result = validate_target_free_spec_file(args.spec)
+        _emit(result.to_dict())
+        return 0 if result.valid else 1
     report = read_evaluation_report(args.report)
     _emit(
         {
@@ -477,7 +487,7 @@ def main(argv: list[str] | None = None) -> int:
             return _run_synthetic_training(args)
         if args.command == "evaluate":
             return _run_evaluation(args)
-        if args.command == "report" and args.report_command == "build":
+        if args.command == "report" and args.report_command in {"build", "validate-execution-spec"}:
             return _run_report(args)
         print(f"OpenThought2Text command accepted: {args.command}")
         print("Use the dataset/model modules to execute the selected reproducible workflow.")

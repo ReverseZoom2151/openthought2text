@@ -88,17 +88,20 @@ class TargetFreeEvaluationSpec:
         # Delay this import until reporting itself is fully initialized.
         from openthought2text.evaluation.records import BenchmarkRowLabel
 
-        spec = cls(
-            str(data["preflight_plan_sha256"]),
-            ArtifactBinding.from_dict(data["model"]),
-            ArtifactBinding.from_dict(data["checkpoint"]),
-            ArtifactBinding.from_dict(data["resolved_config"]),
-            tuple(ControlCondition(item) for item in data["control_conditions"]),
-            tuple(BenchmarkRowLabel.from_dict(item) for item in data["benchmark_rows"]),
-            tuple(data["inference_fields"]),
-            tuple(data["required_output_artifacts"]),
-            str(data["schema_version"]),
-        )
+        try:
+            spec = cls(
+                str(data["preflight_plan_sha256"]),
+                ArtifactBinding.from_dict(data["model"]),
+                ArtifactBinding.from_dict(data["checkpoint"]),
+                ArtifactBinding.from_dict(data["resolved_config"]),
+                tuple(ControlCondition(item) for item in data["control_conditions"]),
+                tuple(BenchmarkRowLabel.from_dict(item) for item in data["benchmark_rows"]),
+                tuple(data["inference_fields"]),
+                tuple(data["required_output_artifacts"]),
+                str(data["schema_version"]),
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            raise ProvenanceError("invalid target-free evaluation spec schema") from error
         if data.get("binding_sha256") != spec.binding_sha256:
             raise ProvenanceError("execution spec binding_sha256 does not match contents")
         return spec
