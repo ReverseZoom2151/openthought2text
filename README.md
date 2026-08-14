@@ -91,6 +91,9 @@ ott evaluate compare-controls --run /path/to/run \
 python examples/synthetic_workflow.py
 python examples/synthetic_experiment.py
 
+# Open `examples/synthetic_demo.html` in a browser. It never loads a participant
+# recording or trained model.
+
 # Reproducible synthetic run artifacts (checkpoint, tokenizer, normalizer,
 # and target-free test predictions). The output directory must not exist.
 ott data prepare --dataset synthetic --root /tmp/ott-synthetic
