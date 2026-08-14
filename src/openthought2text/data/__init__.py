@@ -106,6 +106,11 @@ from .release_bundle import (
     write_dataset_release_bundle,
 )
 from .montage import MontageProvenance, NamedMontage, select_named_montage
+from .augmentation import (
+    NeuralAugmentationConfig,
+    augment_neural_tensor_batch,
+    augment_tensor_backed_samples,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -131,6 +136,7 @@ __all__ = [
     "MontageProvenance",
     "Modality",
     "NeuralTextSample",
+    "NeuralAugmentationConfig",
     "NamedMontage",
     "NeuralTensorBatch",
     "PretrainingExposure",
@@ -169,6 +175,8 @@ __all__ = [
     "ZuCoPrecomputedFeatureAdapter",
     "ZuCoTaskInventory",
     "audit_splits",
+    "augment_neural_tensor_batch",
+    "augment_tensor_backed_samples",
     "audit_authorized_json_features",
     "audit_dataset_release_bundle",
     "build_prepared_artifact_manifest",
