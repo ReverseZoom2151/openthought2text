@@ -12,5 +12,6 @@ BrainMagick, fixation-free EEG, BioCodec/MEG-XL, ActiveLBLM, and
 evidence-factorized decoding. Each addition must beat a compute-matched
 continuous baseline on strict neural contribution rather than fluency alone.
 
-The detailed master plan remains maintained in the parent research workspace;
-release-facing decisions are mirrored here as implementation work lands.
+See the [full master implementation plan](MASTER_PLAN.md) for every research
+traceability decision, architecture choice, stage, release gate, and weekly
+deliverable.

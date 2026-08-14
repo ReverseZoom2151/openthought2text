@@ -86,6 +86,7 @@ python examples/synthetic_workflow.py
 ## Documentation
 
 - [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
+- [Full master implementation plan](docs/MASTER_PLAN.md)
 - [Capability status](docs/CAPABILITIES.md)
 - [Paper-fidelity status](docs/PAPER_FIDELITY.md)
 - [Data format and information-access contract](docs/DATA_FORMAT.md)
