@@ -61,3 +61,16 @@ def test_cli_splits_build_refuses_existing_output_or_sidecar(tmp_path) -> None:
         ])
     assert error.value.code == 2
     assert output.read_text(encoding="utf-8") == "do not replace\n"
+
+
+def test_cli_synthetic_training_writes_run_artifacts_and_refuses_overwrite(tmp_path) -> None:
+    root = tmp_path / "synthetic"
+    assert main(["data", "prepare", "--dataset", "synthetic", "--root", str(root)]) == 0
+    output = tmp_path / "run"
+    assert main(["train", "synthetic", "--root", str(root), "--output", str(output)]) == 0
+    assert {path.name for path in output.iterdir()} == {
+        "checkpoint.pt", "normalizer.json", "predictions.jsonl", "tokenizer.json"
+    }
+    with pytest.raises(SystemExit) as error:
+        main(["train", "synthetic", "--root", str(root), "--output", str(output)])
+    assert error.value.code == 2
