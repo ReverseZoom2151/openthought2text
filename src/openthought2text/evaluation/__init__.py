@@ -74,6 +74,14 @@ from .calibration import (
     calibration_summary,
     risk_coverage_curve,
 )
+from .comparison import (
+    BenchmarkComparisonArtifact,
+    ComparisonDelta,
+    MetricDirection,
+    NamedBenchmarkResult,
+    compare_benchmark_results,
+    render_comparison_markdown,
+)
 from .metrics import (
     ErrorRate,
     RetrievalMetrics,
@@ -109,32 +117,32 @@ from .statistics import (
 )
 
 __all__ = [
-    "BENCHMARK_TABLE_VERSION", "BenchmarkProvenanceReferences", "BenchmarkRowLabel",
+    "BENCHMARK_TABLE_VERSION", "BenchmarkComparisonArtifact", "BenchmarkProvenanceReferences", "BenchmarkRowLabel",
     "BenchmarkTableArtifact", "BenchmarkTableRow", "BootstrapInterval", "CalibrationBin",
-    "CalibrationSummary", "ContinuousAssembly",
+    "CalibrationSummary", "ComparisonDelta", "ContinuousAssembly",
     "ContinuousCoverage", "ContinuousTimingSummary", "ControlAggregate", "ControlResult",
     "DEFAULT_SIGNAL_CONTROLS",
     "EVALUATION_REPORT_VERSION",
     "EditOperations", "ErrorRate", "EvaluationReport", "FaithfulnessConditionResult",
     "FaithfulnessSuiteResult",
     "GateFailure", "GateFailureCode", "GenerationAuditSummary", "GroundingReport",
-    "LabelInvarianceResult", "MetricSpec", "MetricUncertainty",
+    "LabelInvarianceResult", "MetricDirection", "MetricSpec", "MetricUncertainty",
     "OcclusionMetadata", "OcclusionMode", "OcclusionResult", "OcclusionSuiteResult", "OcclusionVariant",
     "PREDICTION_RECORD_VERSION", "PairedPermutationResult", "PredictionRecord", "RetrievalInputs",
     "ReleaseGatePolicy", "ReleaseGateResult", "RetrievalMetrics", "TextErrorCategory",
-    "RiskCoveragePoint", "TextErrorRecord", "TextErrorReport", "TimestampedPredictionWindow", "WindowMergePolicy",
+    "NamedBenchmarkResult", "RiskCoveragePoint", "TextErrorRecord", "TextErrorReport", "TimestampedPredictionWindow", "WindowMergePolicy",
     "aggregate_control_results",
     "assert_label_invariance", "assert_target_free_signature", "audit_label_invariance",
     "build_grounding_report", "character_error_rate", "corpus_character_error_rate",
     "corpus_word_error_rate", "edit_distance", "forbidden_generation_parameters",
-    "aggregate_occlusion_drops", "assemble_continuous_windows", "assess_release_evidence", "calibration_summary", "classify_text_error",
+    "aggregate_occlusion_drops", "assemble_continuous_windows", "assess_release_evidence", "calibration_summary", "classify_text_error", "compare_benchmark_results",
     "classify_text_errors", "cluster_bootstrap_ci",
     "evaluate_saved_predictions", "generate_target_free_prediction_records", "grounded_gain",
     "occlude_channel_time", "occlude_channels", "occlude_time", "paired_permutation_test",
     "run_faithfulness_suite", "run_occlusion_suite", "summarize_continuous_timing",
     "read_evaluation_report", "read_prediction_jsonl", "retrieval_metrics",
     "retrieval_ranks", "stimulus_bootstrap_ci", "subject_bootstrap_ci", "word_error_rate",
-    "render_benchmark_csv", "render_benchmark_markdown", "risk_coverage_curve", "token_ids_to_prediction_records",
+    "render_benchmark_csv", "render_benchmark_markdown", "render_comparison_markdown", "risk_coverage_curve", "token_ids_to_prediction_records",
     "word_edit_operations", "write_evaluation_report",
     "write_prediction_jsonl",
 ]
