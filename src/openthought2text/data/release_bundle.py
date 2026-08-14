@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-import re
-from typing import Any, Mapping
+from typing import Any
 
 from .authorized_features import audit_authorized_json_features
 from .dataset_card import load_dataset_card
@@ -27,7 +28,9 @@ def _digest(path: Path) -> str:
 def _canonical_digest(value: Mapping[str, Any]) -> str:
     body = dict(value)
     body.pop("checksum", None)
-    return sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    return sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
 
 
 def _safe_path(root: Path, value: str | Path) -> tuple[Path, str]:
@@ -57,7 +60,7 @@ class ReleaseArtifactReference:
         return {"uri": self.uri, "sha256": self.sha256}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "ReleaseArtifactReference":
+    def from_dict(cls, data: Mapping[str, Any]) -> ReleaseArtifactReference:
         return cls(str(data["uri"]), str(data["sha256"]))
 
 
@@ -98,7 +101,7 @@ class DatasetReleaseBundle:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "DatasetReleaseBundle":
+    def from_dict(cls, data: Mapping[str, Any]) -> DatasetReleaseBundle:
         if data.get("kind") != RELEASE_BUNDLE_KIND:
             raise ValueError("not an OpenThought2Text dataset release bundle")
         try:
@@ -107,7 +110,9 @@ class DatasetReleaseBundle:
                 dataset_card=ReleaseArtifactReference.from_dict(data["dataset_card"]),
                 canonical_manifest=ReleaseArtifactReference.from_dict(data["canonical_manifest"]),
                 derived_split_plan=ReleaseArtifactReference.from_dict(data["derived_split_plan"]),
-                authorized_feature_descriptor=ReleaseArtifactReference.from_dict(data["authorized_feature_descriptor"]),
+                authorized_feature_descriptor=ReleaseArtifactReference.from_dict(
+                    data["authorized_feature_descriptor"]
+                ),
                 information_access=InformationAccess.from_dict(data["information_access"]),
                 checksum=str(data["checksum"]),
                 version=str(data.get("version", RELEASE_BUNDLE_VERSION)),
@@ -138,7 +143,9 @@ class ReleaseBundleAuditReport:
 
     def require_valid(self) -> DatasetReleaseBundle:
         if not self.passed:
-            raise ValueError("release bundle audit failed: " + ", ".join(x.code for x in self.issues))
+            raise ValueError(
+                "release bundle audit failed: " + ", ".join(x.code for x in self.issues)
+            )
         assert self.bundle is not None
         return self.bundle
 
@@ -150,7 +157,9 @@ def _load_plan(path: Path) -> SplitPlan:
     return SplitPlan(
         protocol=SplitProtocol(data["protocol"]),
         seed=int(data["seed"]),
-        assignments=tuple((str(row["sample_id"]), str(row["split"])) for row in data["assignments"]),
+        assignments=tuple(
+            (str(row["sample_id"]), str(row["split"])) for row in data["assignments"]
+        ),
         excluded_sample_ids=tuple(str(item) for item in data.get("excluded_sample_ids", [])),
         held_out_subject=data.get("held_out_subject"),
     )
@@ -205,21 +214,27 @@ def write_dataset_release_bundle(path: str | Path, bundle: DatasetReleaseBundle)
     if destination.suffix.casefold() != ".json":
         raise ValueError("release bundles must be written as .json")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(bundle.to_dict(), sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    destination.write_text(
+        json.dumps(bundle.to_dict(), sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8"
+    )
 
 
 def audit_dataset_release_bundle(path: str | Path) -> ReleaseBundleAuditReport:
     """Revalidate a bundle, checksums, source policy, and every bound artifact."""
     bundle_path = Path(path).expanduser().resolve()
     if bundle_path.suffix.casefold() != ".json":
-        return ReleaseBundleAuditReport(bundle_path, issues=(ReleaseBundleIssue("UNSUPPORTED_FORMAT", "bundle must use .json"),))
+        return ReleaseBundleAuditReport(
+            bundle_path, issues=(ReleaseBundleIssue("UNSUPPORTED_FORMAT", "bundle must use .json"),)
+        )
     try:
         raw = json.loads(bundle_path.read_text(encoding="utf-8"))
         if not isinstance(raw, Mapping):
             raise ValueError("bundle must be a JSON object")
         bundle = DatasetReleaseBundle.from_dict(raw)
     except (OSError, json.JSONDecodeError, ValueError) as error:
-        return ReleaseBundleAuditReport(bundle_path, issues=(ReleaseBundleIssue("INVALID_BUNDLE", str(error), bundle_path),))
+        return ReleaseBundleAuditReport(
+            bundle_path, issues=(ReleaseBundleIssue("INVALID_BUNDLE", str(error), bundle_path),)
+        )
     root = bundle_path.parent
     references = {
         "dataset_card": bundle.dataset_card,
@@ -237,14 +252,26 @@ def audit_dataset_release_bundle(path: str | Path) -> ReleaseBundleAuditReport:
             continue
         paths[name] = artifact_path
         if _digest(artifact_path) != reference.sha256:
-            issues.append(ReleaseBundleIssue("ARTIFACT_CHECKSUM_MISMATCH", f"{name} bytes changed", artifact_path))
+            issues.append(
+                ReleaseBundleIssue(
+                    "ARTIFACT_CHECKSUM_MISMATCH", f"{name} bytes changed", artifact_path
+                )
+            )
     if not issues:
         try:
             rebuilt = build_dataset_release_bundle(root, **paths)
             if rebuilt.information_access != bundle.information_access:
-                issues.append(ReleaseBundleIssue("INFORMATION_ACCESS_MISMATCH", "bundle contract differs from manifest"))
+                issues.append(
+                    ReleaseBundleIssue(
+                        "INFORMATION_ACCESS_MISMATCH", "bundle contract differs from manifest"
+                    )
+                )
             if rebuilt.dataset_id != bundle.dataset_id:
-                issues.append(ReleaseBundleIssue("DATASET_ID_MISMATCH", "bundle dataset_id differs from manifest"))
+                issues.append(
+                    ReleaseBundleIssue(
+                        "DATASET_ID_MISMATCH", "bundle dataset_id differs from manifest"
+                    )
+                )
         except ValueError as error:
             issues.append(ReleaseBundleIssue("INVALID_BOUND_ARTIFACT", str(error)))
     return ReleaseBundleAuditReport(bundle_path, bundle, tuple(issues))

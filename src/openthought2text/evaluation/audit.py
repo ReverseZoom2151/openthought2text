@@ -7,11 +7,10 @@ that target labels cannot alter the emitted prediction.
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-import inspect
 from typing import Any
-
 
 _FORBIDDEN_TARGET_NAMES = frozenset(
     {

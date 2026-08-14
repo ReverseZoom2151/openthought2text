@@ -7,10 +7,10 @@ the recorded result.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from copy import deepcopy
 import math
 import random
+from collections.abc import Sequence
+from copy import deepcopy
 from typing import Any
 
 
@@ -56,7 +56,11 @@ def shuffle_batch(signal: Any, *, seed: int = 0, permutation: Sequence[int] | No
 
 def gaussian_noise_like(signal: Any, *, seed: int = 0) -> Any:
     """Distribution-matched iid Gaussian noise (global mean and standard deviation)."""
-    values = [value for value in _flatten(signal) if isinstance(value, (int, float)) and math.isfinite(value)]
+    values = [
+        value
+        for value in _flatten(signal)
+        if isinstance(value, (int, float)) and math.isfinite(value)
+    ]
     if not values:
         raise ValueError("signal must contain finite numeric values")
     mean = sum(values) / len(values)
@@ -80,7 +84,9 @@ def mask_only_signal(valid_mask: Any, *, channels: int = 1) -> Any:
     return [[[float(item) for item in row] for _ in range(channels)] for row in _tolist(valid_mask)]
 
 
-def length_only_signal(valid_lengths: Sequence[int], *, channels: int = 1, max_length: int | None = None) -> list[list[list[float]]]:
+def length_only_signal(
+    valid_lengths: Sequence[int], *, channels: int = 1, max_length: int | None = None
+) -> list[list[list[float]]]:
     """Expose only valid sequence length, encoded as a prefix mask."""
     lengths = [int(length) for length in valid_lengths]
     if not lengths or any(length < 0 for length in lengths):

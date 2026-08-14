@@ -28,7 +28,9 @@ def _wrapper(trainable=False):
     return FoundationEncoderWrapper(
         _ExternalFeatureModule(),
         FoundationFeatureContract(4, 6),
-        FoundationPretrainingProvenance("external-demo", "unknown", "declared external neural pretraining"),
+        FoundationPretrainingProvenance(
+            "external-demo", "unknown", "declared external neural pretraining"
+        ),
         trainable=trainable,
     )
 
@@ -51,15 +53,23 @@ def test_foundation_wrapper_passes_through_masks_timing_and_makes_padded_values_
 
 def test_foundation_wrapper_freezes_or_enables_external_parameter_gradients():
     frozen = _wrapper(trainable=False)
-    assert not frozen.trainable and not any(item.requires_grad for item in frozen.external_encoder.parameters())
+    assert not frozen.trainable and not any(
+        item.requires_grad for item in frozen.external_encoder.parameters()
+    )
     features = torch.randn(1, 2, 4, requires_grad=True)
-    frozen(features, torch.ones(1, 2, dtype=torch.bool), _timing(tokens=2)).features.sum().backward()
+    frozen(
+        features, torch.ones(1, 2, dtype=torch.bool), _timing(tokens=2)
+    ).features.sum().backward()
     assert features.grad is not None and features.grad.abs().sum() > 0
     assert all(item.grad is None for item in frozen.external_encoder.parameters())
     frozen.set_trainable(True)
-    assert frozen.trainable and all(item.requires_grad for item in frozen.external_encoder.parameters())
+    assert frozen.trainable and all(
+        item.requires_grad for item in frozen.external_encoder.parameters()
+    )
     frozen.zero_grad(set_to_none=True)
-    frozen(torch.randn(1, 2, 4), torch.ones(1, 2, dtype=torch.bool), _timing(tokens=2)).features.sum().backward()
+    frozen(
+        torch.randn(1, 2, 4), torch.ones(1, 2, dtype=torch.bool), _timing(tokens=2)
+    ).features.sum().backward()
     assert any(item.grad is not None for item in frozen.external_encoder.parameters())
 
 
@@ -72,7 +82,9 @@ def test_foundation_wrapper_validates_contract_provenance_and_external_output():
     with pytest.raises(ValueError, match="input_feature_size"):
         wrapper(torch.randn(1, 2, 3), torch.ones(1, 2, dtype=torch.bool), _timing(tokens=2))
     invalid = FoundationEncoderWrapper(
-        nn.Identity(), FoundationFeatureContract(4, 6), FoundationPretrainingProvenance("x", "disjoint", "y")
+        nn.Identity(),
+        FoundationFeatureContract(4, 6),
+        FoundationPretrainingProvenance("x", "disjoint", "y"),
     )
     with pytest.raises(ValueError, match="forward\\(features, mask\\)"):
         invalid(torch.randn(1, 2, 4), torch.ones(1, 2, dtype=torch.bool), _timing(tokens=2))

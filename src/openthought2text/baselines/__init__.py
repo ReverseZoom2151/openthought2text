@@ -9,6 +9,9 @@ from .classical import (
 )
 
 __all__ = [
-    "BaselineArtifact", "ConstantTextBaseline", "FrequencyTextBaseline",
-    "NearestNeighborTextRetrieval", "RidgeRegressor",
+    "BaselineArtifact",
+    "ConstantTextBaseline",
+    "FrequencyTextBaseline",
+    "NearestNeighborTextRetrieval",
+    "RidgeRegressor",
 ]

@@ -55,7 +55,9 @@ class SemanticAnchorHead(nn.Module):
         if valid.any():
             if labels[valid].lt(0).any() or labels[valid].ge(self.num_anchors).any():
                 raise ValueError("anchor targets must be in range or -100")
-            loss = F.cross_entropy(logits.reshape(-1, self.num_anchors), labels.reshape(-1), ignore_index=-100)
+            loss = F.cross_entropy(
+                logits.reshape(-1, self.num_anchors), labels.reshape(-1), ignore_index=-100
+            )
         else:
             # A differentiable zero makes all-masked minibatches safe in a
             # multi-task training step.
@@ -92,7 +94,9 @@ class CTCProductionHead(nn.Module):
             raise ValueError("token_mask must be [batch, time]")
         mask = token_mask.bool()
         lengths = mask.sum(dim=1, dtype=torch.long)
-        expected = torch.arange(mask.shape[1], device=mask.device).unsqueeze(0) < lengths.unsqueeze(1)
+        expected = torch.arange(mask.shape[1], device=mask.device).unsqueeze(0) < lengths.unsqueeze(
+            1
+        )
         if not torch.equal(mask, expected):
             raise ValueError("CTC token_mask must contain one valid prefix, not holes")
         if (lengths < 1).any():
@@ -121,7 +125,9 @@ class CTCProductionHead(nn.Module):
             raise ValueError("target_lengths must be [batch]")
         target_lengths = target_lengths.to(device=features.device, dtype=torch.long)
         if (target_lengths < 0).any() or (target_lengths > input_lengths).any():
-            raise ValueError("CTC target lengths must be nonnegative and no greater than input lengths")
+            raise ValueError(
+                "CTC target lengths must be nonnegative and no greater than input lengths"
+            )
         if targets.ndim == 2:
             if targets.shape[0] != features.shape[0] or (target_lengths > targets.shape[1]).any():
                 raise ValueError("padded targets have incompatible batch or length")

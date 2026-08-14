@@ -7,16 +7,16 @@ available for the leakage check.
 
 from __future__ import annotations
 
+import json
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import torch
 
 from .schema import NeuralTextSample
-
 
 PREPARED_ARTIFACT_VERSION = "1.0"
 
@@ -160,7 +160,7 @@ class ChannelNormalizer:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "ChannelNormalizer":
+    def from_dict(cls, data: Mapping[str, Any]) -> ChannelNormalizer:
         normalizer = cls(
             mean=torch.tensor(data["mean"], dtype=torch.float64),
             scale=torch.tensor(data["scale"], dtype=torch.float64),
@@ -223,7 +223,7 @@ class PreparedTensorRecord:
     tensor_checksum: str
 
     @classmethod
-    def from_sample(cls, row: TensorBackedSample) -> "PreparedTensorRecord":
+    def from_sample(cls, row: TensorBackedSample) -> PreparedTensorRecord:
         if row.sample.split is None:
             raise ValueError("prepared artifact records require a declared sample split")
         return cls(
@@ -244,7 +244,7 @@ class PreparedTensorRecord:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "PreparedTensorRecord":
+    def from_dict(cls, data: Mapping[str, Any]) -> PreparedTensorRecord:
         shape = tuple(int(value) for value in data["shape"])
         if len(shape) != 2 or any(value < 1 for value in shape):
             raise ValueError("prepared record shape must be two positive dimensions")
@@ -302,7 +302,7 @@ class PreparedArtifactManifest:
         return _canonical_hash(self.to_dict(include_checksum=False))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "PreparedArtifactManifest":
+    def from_dict(cls, data: Mapping[str, Any]) -> PreparedArtifactManifest:
         if data.get("kind") != "openthought2text.prepared_tensor_artifact":
             raise ValueError("not an OpenThought2Text prepared tensor artifact manifest")
         manifest = cls(
@@ -343,8 +343,7 @@ def build_prepared_artifact_manifest(
     sorted_rows = sorted(rows, key=lambda row: row.sample.sample_id)
     source_rows = [row.sample.to_dict() for row in sorted_rows]
     split_rows = [
-        {"sample_id": row.sample.sample_id, "split": row.sample.split}
-        for row in sorted_rows
+        {"sample_id": row.sample.sample_id, "split": row.sample.split} for row in sorted_rows
     ]
     return PreparedArtifactManifest(
         dataset_id=next(iter(dataset_ids)),

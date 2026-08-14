@@ -3,28 +3,29 @@
 from __future__ import annotations
 
 import argparse
+import json
 from dataclasses import asdict
 from hashlib import sha256
-import json
 from pathlib import Path
 
 import torch
 
+from openthought2text.config.run import RunManifest
 from openthought2text.data import (
     AdapterRegistry,
-    audit_authorized_preflight_plan,
+    Brain2QwertyDiscoveryAdapter,
     DatasetManifest,
-    validate_dataset_card,
     SplitProtocol,
     SyntheticNeuralTextAdapter,
-    ZuCoDiscoveryAdapter,
-    Brain2QwertyDiscoveryAdapter,
     T15DiscoveryAdapter,
+    ZuCoDiscoveryAdapter,
+    audit_authorized_preflight_plan,
     audit_splits,
     build_split_plan,
     collate_tensor_backed_samples,
     load_json_tensor_samples,
     load_manifest,
+    validate_dataset_card,
     validate_split_plan,
     write_manifest,
 )
@@ -32,8 +33,8 @@ from openthought2text.evaluation import (
     BenchmarkRowLabel,
     evaluate_saved_predictions,
     read_evaluation_report,
-    write_evaluation_report,
     token_ids_to_prediction_records,
+    write_evaluation_report,
     write_prediction_jsonl,
 )
 from openthought2text.models import NeuralToTextModelConfig, build_neural_to_text_model
@@ -44,7 +45,6 @@ from openthought2text.training import (
     seed_everything,
     train_one_epoch,
 )
-from openthought2text.config.run import RunManifest
 from openthought2text.version import __version__
 
 
@@ -66,7 +66,8 @@ def build_parser() -> argparse.ArgumentParser:
     card = data_subparsers.add_parser("card-validate", help="Validate a checksummed dataset card")
     card.add_argument("--card", type=_path, required=True)
     preflight = data_subparsers.add_parser(
-        "preflight-audit", help="Audit authorized metadata bindings without loading participant signals"
+        "preflight-audit",
+        help="Audit authorized metadata bindings without loading participant signals",
     )
     preflight.add_argument("--plan", type=_path, required=True)
 
@@ -78,7 +79,9 @@ def build_parser() -> argparse.ArgumentParser:
     build_split = splits_subparsers.add_parser("build", help="Build a derived, leakage-aware split")
     build_split.add_argument("--manifest", type=_path, required=True)
     build_split.add_argument("--output", type=_path, required=True)
-    build_split.add_argument("--protocol", choices=[item.value for item in SplitProtocol], required=True)
+    build_split.add_argument(
+        "--protocol", choices=[item.value for item in SplitProtocol], required=True
+    )
     build_split.add_argument("--seed", type=int, default=0)
     build_split.add_argument("--held-out-subject")
     build_split.add_argument("--validation-fraction", type=float, default=0.1)
@@ -86,8 +89,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     train = subparsers.add_parser("train", help="Reproducible local training paths")
     train_subparsers = train.add_subparsers(dest="train_command", required=True)
-    synthetic = train_subparsers.add_parser("synthetic", help="Run the non-participant synthetic trace")
-    synthetic.add_argument("--root", type=_path, required=True, help="prepared synthetic artifact root")
+    synthetic = train_subparsers.add_parser(
+        "synthetic", help="Run the non-participant synthetic trace"
+    )
+    synthetic.add_argument(
+        "--root", type=_path, required=True, help="prepared synthetic artifact root"
+    )
     synthetic.add_argument("--output", type=_path, required=True, help="new run directory")
     synthetic.add_argument("--epochs", type=int, default=1)
     synthetic.add_argument("--seed", type=int, default=7)
@@ -133,8 +140,13 @@ def _emit(value: object) -> None:
 def _run_data(args: argparse.Namespace) -> int:
     if args.data_command == "card-validate":
         report = validate_dataset_card(args.card)
-        _emit({"passed": report.passed, "card": None if report.card is None else report.card.to_dict(),
-               "issues": [{"code": item.code, "message": item.message} for item in report.issues]})
+        _emit(
+            {
+                "passed": report.passed,
+                "card": None if report.card is None else report.card.to_dict(),
+                "issues": [{"code": item.code, "message": item.message} for item in report.issues],
+            }
+        )
         return 0 if report.passed else 1
     if args.data_command == "preflight-audit":
         report = audit_authorized_preflight_plan(args.plan)
@@ -142,8 +154,17 @@ def _run_data(args: argparse.Namespace) -> int:
             {
                 "passed": report.passed,
                 "dataset_id": None if report.plan is None else report.plan.dataset_id,
-                "requested_protocols": [] if report.plan is None else [item.value for item in report.plan.requested_protocols],
-                "issues": [{"code": item.code, "message": item.message, "path": None if item.path is None else str(item.path)} for item in report.issues],
+                "requested_protocols": []
+                if report.plan is None
+                else [item.value for item in report.plan.requested_protocols],
+                "issues": [
+                    {
+                        "code": item.code,
+                        "message": item.message,
+                        "path": None if item.path is None else str(item.path),
+                    }
+                    for item in report.issues
+                ],
             }
         )
         return 0 if report.passed else 1
@@ -155,29 +176,53 @@ def _run_data(args: argparse.Namespace) -> int:
     source = str(args.root)
     if args.data_command == "discover":
         manifest = adapter.build_manifest(source)
-        _emit({"dataset_id": manifest.dataset_id, "sample_count": len(manifest.samples),
-               "information_access": manifest.information_access.to_dict()})
+        _emit(
+            {
+                "dataset_id": manifest.dataset_id,
+                "sample_count": len(manifest.samples),
+                "information_access": manifest.information_access.to_dict(),
+            }
+        )
         return 0
     if args.data_command == "prepare":
         if not isinstance(adapter, SyntheticNeuralTextAdapter):
             raise ValueError("the selected adapter does not implement local preparation yet")
         manifest = adapter.generate(source)
-        _emit({"dataset_id": manifest.dataset_id, "sample_count": len(manifest.samples),
-               "artifact": str(args.root / "synthetic_manifest.jsonl")})
+        _emit(
+            {
+                "dataset_id": manifest.dataset_id,
+                "sample_count": len(manifest.samples),
+                "artifact": str(args.root / "synthetic_manifest.jsonl"),
+            }
+        )
         return 0
     if args.data_command == "validate":
         report = adapter.validate(source)
         if isinstance(adapter, SyntheticNeuralTextAdapter):
-            _emit({"passed": report.passed, "sample_count": len(report.manifest.samples),
-                   "finding_codes": [finding.code for finding in report.split_audit.findings],
-                   "missing_signal_files": [str(path) for path in report.missing_signal_files],
-                   "invalid_signal_files": [str(path) for path in report.invalid_signal_files]})
+            _emit(
+                {
+                    "passed": report.passed,
+                    "sample_count": len(report.manifest.samples),
+                    "finding_codes": [finding.code for finding in report.split_audit.findings],
+                    "missing_signal_files": [str(path) for path in report.missing_signal_files],
+                    "invalid_signal_files": [str(path) for path in report.invalid_signal_files],
+                }
+            )
         else:
             issues = getattr(report, "issues", ())
-            _emit({"passed": bool(getattr(report, "passed", False)),
-                   "issues": [{"code": item.code, "message": item.message,
-                               "path": None if getattr(item, "path", None) is None else str(item.path)}
-                              for item in issues]})
+            _emit(
+                {
+                    "passed": bool(getattr(report, "passed", False)),
+                    "issues": [
+                        {
+                            "code": item.code,
+                            "message": item.message,
+                            "path": None if getattr(item, "path", None) is None else str(item.path),
+                        }
+                        for item in issues
+                    ],
+                }
+            )
         return 0 if report.passed else 1
     raise ValueError(f"unsupported data command: {args.data_command}")
 
@@ -185,8 +230,16 @@ def _run_data(args: argparse.Namespace) -> int:
 def _run_split_audit(args: argparse.Namespace) -> int:
     manifest = load_manifest(_manifest_path(args.artifact))
     report = audit_splits(manifest.samples, information_access=manifest.information_access)
-    _emit({"protocol": args.protocol, "passed": report.passed, "sample_count": report.sample_count,
-           "findings": [{"code": item.code, "severity": item.severity.value} for item in report.findings]})
+    _emit(
+        {
+            "protocol": args.protocol,
+            "passed": report.passed,
+            "sample_count": report.sample_count,
+            "findings": [
+                {"code": item.code, "severity": item.severity.value} for item in report.findings
+            ],
+        }
+    )
     return 0 if report.passed else 1
 
 
@@ -226,7 +279,9 @@ def _run_split_build(args: argparse.Namespace) -> int:
         metadata=metadata,
     )
     write_manifest(output_path, derived_manifest)
-    plan_path.write_text(json.dumps(plan.to_dict(), sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    plan_path.write_text(
+        json.dumps(plan.to_dict(), sort_keys=True, indent=2) + "\n", encoding="utf-8"
+    )
     _emit(
         {
             "source_manifest": str(source_path),
@@ -259,38 +314,75 @@ def _run_synthetic_training(args: argparse.Namespace) -> int:
         raise ValueError("synthetic run requires both train and test samples")
     inputs = build_training_inputs(train_rows, unknown_policy="unk")
     config = NeuralToTextModelConfig(
-        hidden_size=32, temporal_kernel=5, stride_samples=4, encoder_layers=1, decoder_layers=1,
-        encoder_heads=4, decoder_heads=4, vocabulary_size=len(inputs.tokenizer.vocabulary),
-        max_sequence_length=32, encoder_dropout=0.0, decoder_dropout=0.0,
+        hidden_size=32,
+        temporal_kernel=5,
+        stride_samples=4,
+        encoder_layers=1,
+        decoder_layers=1,
+        encoder_heads=4,
+        decoder_heads=4,
+        vocabulary_size=len(inputs.tokenizer.vocabulary),
+        max_sequence_length=32,
+        encoder_dropout=0.0,
+        decoder_dropout=0.0,
     )
     model = build_neural_to_text_model(config)
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
-    steps = tuple(step for _ in range(args.epochs) for step in train_one_epoch(
-        model, inputs.rows, inputs.tokenizer, optimizer=optimizer, batch_size=2,
-        sample_rate_hz=train_rows[0].sample.signal.sampling_rate_hz,
-    ))
+    steps = tuple(
+        step
+        for _ in range(args.epochs)
+        for step in train_one_epoch(
+            model,
+            inputs.rows,
+            inputs.tokenizer,
+            optimizer=optimizer,
+            batch_size=2,
+            sample_rate_hz=train_rows[0].sample.signal.sampling_rate_hz,
+        )
+    )
     args.output.mkdir(parents=True)
-    (args.output / "tokenizer.json").write_text(json.dumps(inputs.tokenizer.to_dict(), sort_keys=True) + "\n", encoding="utf-8")
-    (args.output / "normalizer.json").write_text(json.dumps(inputs.normalizer.to_dict(), sort_keys=True) + "\n", encoding="utf-8")
+    (args.output / "tokenizer.json").write_text(
+        json.dumps(inputs.tokenizer.to_dict(), sort_keys=True) + "\n", encoding="utf-8"
+    )
+    (args.output / "normalizer.json").write_text(
+        json.dumps(inputs.normalizer.to_dict(), sort_keys=True) + "\n", encoding="utf-8"
+    )
     run_id = f"synthetic-seed-{args.seed}"
     run_manifest = RunManifest(
-        experiment_name=run_id, dataset_artifact_checksum=_sha256_file(manifest_path),
-        split_manifest_checksum=_sha256_file(manifest_path), seed=args.seed,
-        resolved_config={"model": asdict(config), "tokenizer_checksum": inputs.tokenizer.checksum,
-                         "normalizer_checksum": inputs.normalizer.checksum},
+        experiment_name=run_id,
+        dataset_artifact_checksum=_sha256_file(manifest_path),
+        split_manifest_checksum=_sha256_file(manifest_path),
+        seed=args.seed,
+        resolved_config={
+            "model": asdict(config),
+            "tokenizer_checksum": inputs.tokenizer.checksum,
+            "normalizer_checksum": inputs.normalizer.checksum,
+        },
     )
     (args.output / "run_manifest.json").write_text(
         json.dumps(run_manifest.to_dict(), sort_keys=True, indent=2) + "\n", encoding="utf-8"
     )
     checkpoint = args.output / "checkpoint.pt"
-    save_checkpoint(checkpoint, model=model, optimizer=optimizer, metadata=CheckpointMetadata(
-        epoch=args.epochs, step=len(steps), selection_metric="synthetic_train_loss",
-        selection_value=steps[-1].loss, run_manifest=run_manifest,
-    ))
+    save_checkpoint(
+        checkpoint,
+        model=model,
+        optimizer=optimizer,
+        metadata=CheckpointMetadata(
+            epoch=args.epochs,
+            step=len(steps),
+            selection_metric="synthetic_train_loss",
+            selection_value=steps[-1].loss,
+            run_manifest=run_manifest,
+        ),
+    )
     batch = collate_tensor_backed_samples(test_rows)
     model.eval()
-    generated = model.generate(batch.signals, channel_mask=batch.channel_mask, token_mask=batch.time_mask,
-                               sample_rate_hz=test_rows[0].sample.signal.sampling_rate_hz)
+    generated = model.generate(
+        batch.signals,
+        channel_mask=batch.channel_mask,
+        token_mask=batch.time_mask,
+        sample_rate_hz=test_rows[0].sample.signal.sampling_rate_hz,
+    )
     # Random/untrained models may emit only special tokens; preserve that as an
     # explicit evaluable empty prediction rather than failing serialization.
     records = token_ids_to_prediction_records(
@@ -301,8 +393,16 @@ def _run_synthetic_training(args: argparse.Namespace) -> int:
     )
     predictions = args.output / "predictions.jsonl"
     write_prediction_jsonl(predictions, records)
-    _emit({"run_id": run_id, "output": str(args.output), "checkpoint": str(checkpoint),
-           "predictions": str(predictions), "steps": len(steps), "final_train_loss": steps[-1].loss})
+    _emit(
+        {
+            "run_id": run_id,
+            "output": str(args.output),
+            "checkpoint": str(checkpoint),
+            "predictions": str(predictions),
+            "steps": len(steps),
+            "final_train_loss": steps[-1].loss,
+        }
+    )
     return 0
 
 
@@ -314,15 +414,31 @@ def _run_evaluation(args: argparse.Namespace) -> int:
             prediction_artifact=str(args.predictions),
         )
         write_evaluation_report(args.output, report)
-        _emit({"output": str(args.output), "metrics": report.metrics,
-               "grounding": {name: value.grounded_gain for name, value in report.grounding.items()}})
+        _emit(
+            {
+                "output": str(args.output),
+                "metrics": report.metrics,
+                "grounding": {
+                    name: value.grounded_gain for name, value in report.grounding.items()
+                },
+            }
+        )
         return 0
     if args.evaluate_command == "compare-controls":
         report = read_evaluation_report(args.run)
         requested = set(args.controls.split(","))
-        selected = [row.to_dict() for row in report.control_results if row.condition.value in requested]
-        _emit({"run_id": report.run_id, "controls": selected,
-               "grounding": {name: value.grounded_gain for name, value in report.grounding.items()}})
+        selected = [
+            row.to_dict() for row in report.control_results if row.condition.value in requested
+        ]
+        _emit(
+            {
+                "run_id": report.run_id,
+                "controls": selected,
+                "grounding": {
+                    name: value.grounded_gain for name, value in report.grounding.items()
+                },
+            }
+        )
         return 0
     raise ValueError(
         "audit-generation cannot load an arbitrary checkpoint; construct a trusted model and use "
@@ -332,9 +448,17 @@ def _run_evaluation(args: argparse.Namespace) -> int:
 
 def _run_report(args: argparse.Namespace) -> int:
     report = read_evaluation_report(args.report)
-    _emit({"run_id": report.run_id, "benchmark": report.benchmark.value, "metrics": report.metrics,
-           "prediction_count": report.prediction_count,
-           "grounded_gain": {name: value.grounded_gain for name, value in report.grounding.items()}})
+    _emit(
+        {
+            "run_id": report.run_id,
+            "benchmark": report.benchmark.value,
+            "metrics": report.metrics,
+            "prediction_count": report.prediction_count,
+            "grounded_gain": {
+                name: value.grounded_gain for name, value in report.grounding.items()
+            },
+        }
+    )
     return 0
 
 

@@ -37,7 +37,11 @@ def test_group_aware_infonce_masks_same_stimulus_false_negatives_and_backpropaga
     criterion = GroupAwareSymmetricInfoNCE(temperature=0.1)
     ungrouped = criterion(neural, text)
     grouped = criterion(neural, text, torch.tensor([5, 5, 9]))
-    assert grouped.false_negative_mask.tolist() == [[False, True, False], [True, False, False], [False, False, False]]
+    assert grouped.false_negative_mask.tolist() == [
+        [False, True, False],
+        [True, False, False],
+        [False, False, False],
+    ]
     assert torch.isneginf(grouped.logits[0, 1]) and torch.isneginf(grouped.logits[1, 0])
     assert grouped.loss < ungrouped.loss
     grouped.loss.backward()

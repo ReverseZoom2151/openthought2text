@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import json
+from collections.abc import Iterable, Iterator, Mapping
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping
+from typing import Any
 
-from .schema import InformationAccess, NeuralTextSample, SCHEMA_VERSION, SchemaError
-
+from .schema import SCHEMA_VERSION, InformationAccess, NeuralTextSample, SchemaError
 
 MANIFEST_KIND = "openthought2text.manifest"
 

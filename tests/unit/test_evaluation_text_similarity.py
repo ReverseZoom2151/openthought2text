@@ -6,7 +6,9 @@ from openthought2text.evaluation import corpus_bleu, corpus_meteor_unigram_appro
 def test_corpus_bleu_is_effective_order_and_tokenization_explicit() -> None:
     assert corpus_bleu(["alpha"], ["alpha"]) == pytest.approx(1.0)
     assert corpus_bleu(["a b c"], ["x y z"]) == 0.0
-    assert corpus_bleu(["A|B"], ["a|b"], tokenizer=lambda text: text.casefold().split("|")) == pytest.approx(1.0)
+    assert corpus_bleu(
+        ["A|B"], ["a|b"], tokenizer=lambda text: text.casefold().split("|")
+    ) == pytest.approx(1.0)
 
 
 def test_rouge_l_and_meteor_approx_known_and_empty_cases() -> None:

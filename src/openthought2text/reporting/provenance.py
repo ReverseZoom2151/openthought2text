@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+import json
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-import re
-from typing import Any, Mapping
-
+from typing import Any
 
 PROVENANCE_REPORT_VERSION = "1.0"
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
-_AMBIGUOUS = frozenset({"", "-", "n/a", "na", "none", "null", "tbd", "unknown", "unset", "ambiguous"})
+_AMBIGUOUS = frozenset(
+    {"", "-", "n/a", "na", "none", "null", "tbd", "unknown", "unset", "ambiguous"}
+)
 
 
 class ProvenanceError(ValueError):
@@ -49,9 +51,11 @@ class ArtifactBinding:
         return {"identifier": self.identifier, "uri": self.uri, "sha256": self.sha256}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "ArtifactBinding":
+    def from_dict(cls, data: Mapping[str, Any]) -> ArtifactBinding:
         _require_keys(data, {"identifier", "uri", "sha256"}, "artifact")
-        return cls(identifier=str(data["identifier"]), uri=str(data["uri"]), sha256=str(data["sha256"]))
+        return cls(
+            identifier=str(data["identifier"]), uri=str(data["uri"]), sha256=str(data["sha256"])
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,7 +91,7 @@ class InformationAccessContract:
         return {name: getattr(self, name) for name in self.__dataclass_fields__}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "InformationAccessContract":
+    def from_dict(cls, data: Mapping[str, Any]) -> InformationAccessContract:
         fields = set(cls.__dataclass_fields__)
         _require_keys(data, fields, "information_access")
         return cls(**{name: data[name] for name in fields})
@@ -116,7 +120,9 @@ class RunArtifactProvenance:
     @property
     def binding_sha256(self) -> str:
         """Digest of every research-relevant input, not of an arbitrary timestamp."""
-        payload = json.dumps(self.binding_dict(), sort_keys=True, separators=(",", ":")).encode("utf-8")
+        payload = json.dumps(self.binding_dict(), sort_keys=True, separators=(",", ":")).encode(
+            "utf-8"
+        )
         return sha256(payload).hexdigest()
 
     def binding_dict(self) -> dict[str, Any]:
@@ -136,10 +142,18 @@ class RunArtifactProvenance:
         return {**self.binding_dict(), "binding_sha256": self.binding_sha256}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "RunArtifactProvenance":
+    def from_dict(cls, data: Mapping[str, Any]) -> RunArtifactProvenance:
         required = {
-            "schema_version", "run_id", "model", "checkpoint", "data_manifest", "split_plan", "config",
-            "code_revision", "information_access", "binding_sha256",
+            "schema_version",
+            "run_id",
+            "model",
+            "checkpoint",
+            "data_manifest",
+            "split_plan",
+            "config",
+            "code_revision",
+            "information_access",
+            "binding_sha256",
         }
         _require_keys(data, required, "provenance report")
         report = cls(

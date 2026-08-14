@@ -6,12 +6,13 @@ They intentionally contain no FIF, EDF, HDF5, or participant-file loader.
 
 from __future__ import annotations
 
+import json
+import math
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
-import json
-import math
-from typing import Any, Iterable, Mapping, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 class TaskConversionSeverity(str, Enum):
@@ -44,7 +45,10 @@ class TaskConversionQualityReport:
 
     def require_valid(self) -> None:
         if not self.passed:
-            raise ValueError(f"{self.dataset} conversion metadata invalid: " + ", ".join(x.code for x in self.errors))
+            raise ValueError(
+                f"{self.dataset} conversion metadata invalid: "
+                + ", ".join(x.code for x in self.errors)
+            )
 
 
 def _string(value: object) -> bool:
@@ -52,10 +56,17 @@ def _string(value: object) -> bool:
 
 
 def _positive(value: object) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(float(value)) and float(value) > 0
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+        and float(value) > 0
+    )
 
 
-def _issue(issues: list[TaskConversionIssue], code: str, message: str, index: int, field: str) -> None:
+def _issue(
+    issues: list[TaskConversionIssue], code: str, message: str, index: int, field: str
+) -> None:
     issues.append(TaskConversionIssue(code, TaskConversionSeverity.ERROR, message, index, field))
 
 
@@ -63,7 +74,9 @@ def _issue(issues: list[TaskConversionIssue], code: str, message: str, index: in
 class AuthorizedBrain2QwertyReader(Protocol):
     authorization_id: str
 
-    def read_typed_event_records(self, source_root_identifier: str) -> Iterable[Mapping[str, Any]]: ...
+    def read_typed_event_records(
+        self, source_root_identifier: str
+    ) -> Iterable[Mapping[str, Any]]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,32 +130,90 @@ def validate_brain2qwerty_typed_events(
     for index, record in enumerate(records):
         count += 1
         if not isinstance(record, Mapping):
-            _issue(issues, "MALFORMED_TYPED_EVENT_RECORD", "reader record must be a mapping", index, "record")
+            _issue(
+                issues,
+                "MALFORMED_TYPED_EVENT_RECORD",
+                "reader record must be a mapping",
+                index,
+                "record",
+            )
             continue
         for key in ("subject_id", "recording_id"):
             if not _string(record.get(key)):
                 _issue(issues, "MISSING_TYPED_EVENT_FIELD", f"{key} is required", index, key)
         modality = record.get("modality")
         if modality not in {"eeg", "meg"}:
-            _issue(issues, "INVALID_MODALITY", "typed-event modality must be eeg or meg", index, "modality")
+            _issue(
+                issues,
+                "INVALID_MODALITY",
+                "typed-event modality must be eeg or meg",
+                index,
+                "modality",
+            )
         elif _string(record.get("recording_id")):
             prior = modalities_by_recording.setdefault(str(record["recording_id"]), str(modality))
             if prior != modality:
-                _issue(issues, "MIXED_MODALITY_RECORDING", "one recording_id cannot mix EEG and MEG events", index, "recording_id")
+                _issue(
+                    issues,
+                    "MIXED_MODALITY_RECORDING",
+                    "one recording_id cannot mix EEG and MEG events",
+                    index,
+                    "recording_id",
+                )
         event = record.get("event")
-        if not isinstance(event, Mapping) or not _string(event.get("event_id")) or not _string(event.get("typed_text")) or not isinstance(event.get("timestamp_s"), (int, float)) or float(event["timestamp_s"]) < 0:
-            _issue(issues, "MALFORMED_TYPED_EVENT", "event needs ID, typed_text, and nonnegative timestamp_s", index, "event")
-        if not _positive(record.get("sampling_rate_hz")) or not _positive(record.get("recording_duration_s")):
-            _issue(issues, "MALFORMED_SIGNAL_TIMELINE", "sampling_rate_hz and recording_duration_s must be positive", index, "signal")
-        elif isinstance(event, Mapping) and isinstance(event.get("timestamp_s"), (int, float)) and float(event["timestamp_s"]) + config.duration_s > float(record["recording_duration_s"]):
-            _issue(issues, "WINDOW_EXCEEDS_RECORDING", "synchronous 500ms-style window exceeds recording timeline", index, "event.timestamp_s")
+        if (
+            not isinstance(event, Mapping)
+            or not _string(event.get("event_id"))
+            or not _string(event.get("typed_text"))
+            or not isinstance(event.get("timestamp_s"), (int, float))
+            or float(event["timestamp_s"]) < 0
+        ):
+            _issue(
+                issues,
+                "MALFORMED_TYPED_EVENT",
+                "event needs ID, typed_text, and nonnegative timestamp_s",
+                index,
+                "event",
+            )
+        if not _positive(record.get("sampling_rate_hz")) or not _positive(
+            record.get("recording_duration_s")
+        ):
+            _issue(
+                issues,
+                "MALFORMED_SIGNAL_TIMELINE",
+                "sampling_rate_hz and recording_duration_s must be positive",
+                index,
+                "signal",
+            )
+        elif (
+            isinstance(event, Mapping)
+            and isinstance(event.get("timestamp_s"), (int, float))
+            and float(event["timestamp_s"]) + config.duration_s
+            > float(record["recording_duration_s"])
+        ):
+            _issue(
+                issues,
+                "WINDOW_EXCEEDS_RECORDING",
+                "synchronous 500ms-style window exceeds recording timeline",
+                index,
+                "event.timestamp_s",
+            )
     if not count:
-        issues.append(TaskConversionIssue("NO_TYPED_EVENTS", TaskConversionSeverity.ERROR, "authorized reader returned no typed events"))
+        issues.append(
+            TaskConversionIssue(
+                "NO_TYPED_EVENTS",
+                TaskConversionSeverity.ERROR,
+                "authorized reader returned no typed events",
+            )
+        )
     return TaskConversionQualityReport("brain2qwerty", count, tuple(issues))
 
 
 def plan_authorized_brain2qwerty_conversion(
-    reader: AuthorizedBrain2QwertyReader, *, authorization_id: str, source_root_identifier: str,
+    reader: AuthorizedBrain2QwertyReader,
+    *,
+    authorization_id: str,
+    source_root_identifier: str,
     window: Brain2QwertyWindowConfig = Brain2QwertyWindowConfig(),
 ) -> tuple[TaskConversionQualityReport, Brain2QwertyConversionPlan | None]:
     if not isinstance(reader, AuthorizedBrain2QwertyReader):
@@ -153,17 +224,29 @@ def plan_authorized_brain2qwerty_conversion(
     report = validate_brain2qwerty_typed_events(records, window)
     if not report.passed:
         return report, None
-    counts = {modality: sum(record["modality"] == modality for record in records) for modality in ("eeg", "meg")}
-    schema = [{key: record[key] for key in ("subject_id", "recording_id", "modality")} for record in records]
-    digest = sha256(json.dumps(schema, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
-    return report, Brain2QwertyConversionPlan(authorization_id, source_root_identifier, window, counts, digest)
+    counts = {
+        modality: sum(record["modality"] == modality for record in records)
+        for modality in ("eeg", "meg")
+    }
+    schema = [
+        {key: record[key] for key in ("subject_id", "recording_id", "modality")}
+        for record in records
+    ]
+    digest = sha256(
+        json.dumps(schema, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return report, Brain2QwertyConversionPlan(
+        authorization_id, source_root_identifier, window, counts, digest
+    )
 
 
 @runtime_checkable
 class AuthorizedT15DescriptorReader(Protocol):
     authorization_id: str
 
-    def read_descriptor_records(self, source_root_identifier: str) -> Iterable[Mapping[str, Any]]: ...
+    def read_descriptor_records(
+        self, source_root_identifier: str
+    ) -> Iterable[Mapping[str, Any]]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,10 +257,16 @@ class T15TargetAccessContract:
 
     def __post_init__(self) -> None:
         if not self.train_targets or not self.validation_targets or self.inference_targets:
-            raise ValueError("T15 target-access contract requires train/validation only and no inference targets")
+            raise ValueError(
+                "T15 target-access contract requires train/validation only and no inference targets"
+            )
 
     def to_dict(self) -> dict[str, bool]:
-        return {"train_targets": self.train_targets, "validation_targets": self.validation_targets, "inference_targets": self.inference_targets}
+        return {
+            "train_targets": self.train_targets,
+            "validation_targets": self.validation_targets,
+            "inference_targets": self.inference_targets,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,12 +279,20 @@ class T15ConversionPlan:
 
     def to_dict(self) -> dict[str, object]:
         data = {
-            "kind": "openthought2text.t15_conversion_plan", "authorization_id": self.authorization_id,
-            "source_root_identifier": self.source_root_identifier, "target_access": self.target_access.to_dict(),
-            "block_count": self.block_count, "descriptor_schema_checksum": self.descriptor_schema_checksum,
+            "kind": "openthought2text.t15_conversion_plan",
+            "authorization_id": self.authorization_id,
+            "source_root_identifier": self.source_root_identifier,
+            "target_access": self.target_access.to_dict(),
+            "block_count": self.block_count,
+            "descriptor_schema_checksum": self.descriptor_schema_checksum,
             "payload_policy": "descriptor_metadata_only_no_hdf5_loading",
         }
-        return {**data, "checksum": sha256(json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()}
+        return {
+            **data,
+            "checksum": sha256(
+                json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            ).hexdigest(),
+        }
 
 
 def validate_t15_descriptor_records(
@@ -208,26 +305,59 @@ def validate_t15_descriptor_records(
     for index, record in enumerate(records):
         count += 1
         if not isinstance(record, Mapping):
-            _issue(issues, "MALFORMED_DESCRIPTOR_RECORD", "descriptor record must be a mapping", index, "record")
+            _issue(
+                issues,
+                "MALFORMED_DESCRIPTOR_RECORD",
+                "descriptor record must be a mapping",
+                index,
+                "record",
+            )
             continue
         keys = ("subject_id", "block_id", "day_id", "session_id", "recording_id")
         if any(not _string(record.get(key)) for key in keys):
-            _issue(issues, "MISSING_BLOCK_DAY_SESSION_MAPPING", "descriptor needs subject/block/day/session/recording IDs", index, "mapping")
+            _issue(
+                issues,
+                "MISSING_BLOCK_DAY_SESSION_MAPPING",
+                "descriptor needs subject/block/day/session/recording IDs",
+                index,
+                "mapping",
+            )
             continue
         identity = tuple(str(record[key]) for key in keys[:4])
         if identity in seen:
-            _issue(issues, "DUPLICATE_BLOCK_DAY_SESSION_MAPPING", "block/day/session mapping must be unique per subject", index, "mapping")
+            _issue(
+                issues,
+                "DUPLICATE_BLOCK_DAY_SESSION_MAPPING",
+                "block/day/session mapping must be unique per subject",
+                index,
+                "mapping",
+            )
         seen.add(identity)
         declared_access = record.get("target_access")
         if declared_access != target_access.to_dict():
-            _issue(issues, "TARGET_ACCESS_MISMATCH", "descriptor target_access must match declared contract", index, "target_access")
+            _issue(
+                issues,
+                "TARGET_ACCESS_MISMATCH",
+                "descriptor target_access must match declared contract",
+                index,
+                "target_access",
+            )
     if not count:
-        issues.append(TaskConversionIssue("NO_DESCRIPTOR_RECORDS", TaskConversionSeverity.ERROR, "authorized reader returned no descriptor records"))
+        issues.append(
+            TaskConversionIssue(
+                "NO_DESCRIPTOR_RECORDS",
+                TaskConversionSeverity.ERROR,
+                "authorized reader returned no descriptor records",
+            )
+        )
     return TaskConversionQualityReport("t15", count, tuple(issues))
 
 
 def plan_authorized_t15_conversion(
-    reader: AuthorizedT15DescriptorReader, *, authorization_id: str, source_root_identifier: str,
+    reader: AuthorizedT15DescriptorReader,
+    *,
+    authorization_id: str,
+    source_root_identifier: str,
     target_access: T15TargetAccessContract,
 ) -> tuple[TaskConversionQualityReport, T15ConversionPlan | None]:
     if not isinstance(reader, AuthorizedT15DescriptorReader):
@@ -238,6 +368,16 @@ def plan_authorized_t15_conversion(
     report = validate_t15_descriptor_records(records, target_access)
     if not report.passed:
         return report, None
-    schema = [{key: record[key] for key in ("subject_id", "block_id", "day_id", "session_id", "recording_id")} for record in records]
-    digest = sha256(json.dumps(schema, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
-    return report, T15ConversionPlan(authorization_id, source_root_identifier, target_access, len(records), digest)
+    schema = [
+        {
+            key: record[key]
+            for key in ("subject_id", "block_id", "day_id", "session_id", "recording_id")
+        }
+        for record in records
+    ]
+    digest = sha256(
+        json.dumps(schema, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return report, T15ConversionPlan(
+        authorization_id, source_root_identifier, target_access, len(records), digest
+    )

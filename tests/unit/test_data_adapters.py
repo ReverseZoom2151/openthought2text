@@ -1,6 +1,8 @@
-from openthought2text.data import AdapterRegistry, DatasetManifest, InformationAccess
-from .test_data_schema import sample
 import pytest
+
+from openthought2text.data import AdapterRegistry, DatasetManifest, InformationAccess
+
+from .test_data_schema import sample
 
 
 class Adapter:

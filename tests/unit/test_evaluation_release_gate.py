@@ -31,7 +31,15 @@ def _provenance(*, unsafe_access: bool = False, run_id: str = "run-1") -> RunArt
         config=binding("config", "e"),
         code_revision="abc123",
         information_access=InformationAccessContract(
-            True, True, unsafe_access, unsafe_access, False, False, False, "LOSO unique text", "fixed windows"
+            True,
+            True,
+            unsafe_access,
+            unsafe_access,
+            False,
+            False,
+            False,
+            "LOSO unique text",
+            "fixed windows",
         ),
     )
 
@@ -61,14 +69,19 @@ def _audit(*, safe: bool = True) -> GenerationAuditSummary:
 
 def test_complete_evidence_package_passes_gate() -> None:
     result = assess_release_evidence(
-        _report(), _provenance(), generation_audit=_audit(), available_controls=tuple(ControlCondition)
+        _report(),
+        _provenance(),
+        generation_audit=_audit(),
+        available_controls=tuple(ControlCondition),
     )
     assert result.passed
     assert result.failure_codes == ()
 
 
 def test_gate_returns_structured_missing_evidence_failures() -> None:
-    controls = tuple(condition for condition in ControlCondition if condition is not ControlCondition.TIMING_ONLY)
+    controls = tuple(
+        condition for condition in ControlCondition if condition is not ControlCondition.TIMING_ONLY
+    )
     result = assess_release_evidence(
         _report(controls=controls, gain=0.0, contribution=0.0),
         _provenance(unsafe_access=True, run_id="other-run"),

@@ -55,7 +55,9 @@ class NeuralRepresentationBottleneck(nn.Module):
         self.hidden_size = hidden_size
         self.quantizer = quantizer
 
-    def forward(self, features: torch.Tensor, mask: torch.Tensor) -> NeuralRepresentationBottleneckOutput:
+    def forward(
+        self, features: torch.Tensor, mask: torch.Tensor
+    ) -> NeuralRepresentationBottleneckOutput:
         if features.ndim != 3 or features.shape[-1] != self.hidden_size:
             raise ValueError("features must be [batch, tokens, hidden_size]")
         if mask.shape != features.shape[:2]:

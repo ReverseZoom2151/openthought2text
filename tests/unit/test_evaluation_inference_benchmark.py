@@ -16,7 +16,12 @@ def test_benchmark_uses_explicit_inputs_warmup_and_injected_clock() -> None:
         return "generated"
 
     report = benchmark_target_free_inference(
-        generate, factory, warmup_count=1, measured_count=3, samples_per_input=2, clock=lambda: next(timestamps)
+        generate,
+        factory,
+        warmup_count=1,
+        measured_count=3,
+        samples_per_input=2,
+        clock=lambda: next(timestamps),
     )
     assert inputs == [0, 1, 2, 3]
     assert calls == [{"neural": 0}, {"neural": 1}, {"neural": 2}, {"neural": 3}]
@@ -33,4 +38,6 @@ def test_benchmark_rejects_target_accepting_generator_and_invalid_counts() -> No
     with pytest.raises(AssertionError, match="forbidden target"):
         benchmark_target_free_inference(unsafe, lambda index: index, measured_count=1)
     with pytest.raises(ValueError, match="positive"):
-        benchmark_target_free_inference(lambda neural: neural, lambda index: index, measured_count=0)
+        benchmark_target_free_inference(
+            lambda neural: neural, lambda index: index, measured_count=0
+        )

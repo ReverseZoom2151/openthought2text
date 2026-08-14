@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 
 @dataclass(frozen=True)
@@ -41,7 +40,9 @@ class NeuralTokenizerOutput:
         return self.commitment_loss + self.codebook_loss
 
 
-def codebook_health(indices: torch.Tensor, codebook_size: int, mask: torch.Tensor | None = None) -> CodebookHealth:
+def codebook_health(
+    indices: torch.Tensor, codebook_size: int, mask: torch.Tensor | None = None
+) -> CodebookHealth:
     """Calculate usage statistics; mask selects valid token positions."""
     flat = indices.reshape(-1)
     if mask is not None:
@@ -72,7 +73,9 @@ class NeuralVectorQuantizer(nn.Module):
         self.codebook = nn.Embedding(config.codebook_size, config.embedding_dim)
         nn.init.uniform_(self.codebook.weight, -1 / config.codebook_size, 1 / config.codebook_size)
 
-    def forward(self, embeddings: torch.Tensor, mask: torch.Tensor | None = None) -> NeuralTokenizerOutput:
+    def forward(
+        self, embeddings: torch.Tensor, mask: torch.Tensor | None = None
+    ) -> NeuralTokenizerOutput:
         if embeddings.ndim != 3 or embeddings.shape[-1] != self.config.embedding_dim:
             raise ValueError("embeddings must be [batch, tokens, embedding_dim]")
         if mask is not None and mask.shape != embeddings.shape[:2]:
@@ -89,7 +92,9 @@ class NeuralVectorQuantizer(nn.Module):
         else:
             weights = mask.to(dtype=embeddings.dtype)
         denom = weights.sum().clamp_min(1)
-        commitment = ((embeddings - selected.detach()).square().mean(dim=-1) * weights).sum() / denom
+        commitment = (
+            (embeddings - selected.detach()).square().mean(dim=-1) * weights
+        ).sum() / denom
         codebook = ((embeddings.detach() - selected).square().mean(dim=-1) * weights).sum() / denom
         quantized = embeddings + (selected - embeddings).detach()
         if mask is not None:

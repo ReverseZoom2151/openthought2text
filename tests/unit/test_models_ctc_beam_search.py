@@ -27,18 +27,26 @@ def test_ctc_beam_search_handles_blank_repetition_and_valid_lengths():
 
 
 def test_ctc_beam_search_exposes_neural_and_validation_fitted_language_components():
-    scorer = ValidationFittedLanguageScorer(lambda prefix: 30.0 if prefix == (2,) else 0.0, "held-out calibration", 5)
-    decoder = TargetFreeCTCBeamSearch(CTCBeamSearchConfig(beam_width=3, blank_token_id=0, language_weight=1.0))
+    scorer = ValidationFittedLanguageScorer(
+        lambda prefix: 30.0 if prefix == (2,) else 0.0, "held-out calibration", 5
+    )
+    decoder = TargetFreeCTCBeamSearch(
+        CTCBeamSearchConfig(beam_width=3, blank_token_id=0, language_weight=1.0)
+    )
     logits = _logits([1])
     output = decoder.decode(logits, torch.tensor([1]), scorer)
     assert output.best_token_ids == ((2,),)
     assert output.language_scores is not None
     assert output.language_scores[0, 0].item() == 30.0
-    assert output.combined_scores[0, 0].item() == pytest.approx(output.neural_scores[0, 0].item() + 30.0)
+    assert output.combined_scores[0, 0].item() == pytest.approx(
+        output.neural_scores[0, 0].item() + 30.0
+    )
 
 
 def test_ctc_beam_search_is_target_free_deterministic_and_validates_inputs():
-    decoder = TargetFreeCTCBeamSearch(CTCBeamSearchConfig(beam_width=2, blank_token_id=0, input_is_log_probs=True))
+    decoder = TargetFreeCTCBeamSearch(
+        CTCBeamSearchConfig(beam_width=2, blank_token_id=0, input_is_log_probs=True)
+    )
     signature = inspect.signature(decoder.decode)
     assert set(signature.parameters) == {"logits_or_log_probs", "valid_lengths", "language_scorer"}
     log_probs = torch.log_softmax(_logits([1, 0]), dim=-1)

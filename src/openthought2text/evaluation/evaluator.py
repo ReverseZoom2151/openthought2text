@@ -57,7 +57,8 @@ def evaluate_saved_predictions(
     _validate_paired_sample_ids(grouped)
     resolved_references = _resolve_references(grouped, references)
     retrieval_inputs = {
-        ControlCondition(condition): value for condition, value in (retrieval_by_control or {}).items()
+        ControlCondition(condition): value
+        for condition, value in (retrieval_by_control or {}).items()
     }
 
     control_results: list[ControlResult] = []
@@ -67,7 +68,9 @@ def evaluate_saved_predictions(
         predictions_for_condition = [rows[sample_id].prediction_text for sample_id in ordered_ids]
         references_for_condition = [resolved_references[sample_id] for sample_id in ordered_ids]
         scores = {
-            "cer": corpus_character_error_rate(references_for_condition, predictions_for_condition).rate,
+            "cer": corpus_character_error_rate(
+                references_for_condition, predictions_for_condition
+            ).rate,
             "wer": corpus_word_error_rate(references_for_condition, predictions_for_condition).rate,
         }
         if condition in retrieval_inputs:
@@ -82,7 +85,9 @@ def evaluate_saved_predictions(
             )
             scores["retrieval_mrr"] = retrieval.mean_reciprocal_rank
             scores["retrieval_mean_rank"] = retrieval.mean_rank
-            scores.update({f"retrieval_recall_at_{k}": value for k, value in retrieval.recall_at.items()})
+            scores.update(
+                {f"retrieval_recall_at_{k}": value for k, value in retrieval.recall_at.items()}
+            )
         control_results.append(ControlResult(condition, scores, examples=len(rows)))
 
     full = next(row for row in control_results if row.condition is ControlCondition.FULL)
@@ -100,7 +105,8 @@ def evaluate_saved_predictions(
                     full_score,
                     paired_controls,
                     shuffled_score=paired_controls[ControlCondition.SHUFFLED.value],
-                    higher_is_better=not metric.endswith("cer") and not metric.endswith("wer")
+                    higher_is_better=not metric.endswith("cer")
+                    and not metric.endswith("wer")
                     and metric != "retrieval_mean_rank",
                 )
     return EvaluationReport(
@@ -130,12 +136,16 @@ def _group_records(
     grouped: dict[ControlCondition, dict[str, PredictionRecord]] = defaultdict(dict)
     for record in records:
         if record.sample_id in grouped[record.control]:
-            raise ValueError(f"duplicate sample_id within {record.control.value}: {record.sample_id}")
+            raise ValueError(
+                f"duplicate sample_id within {record.control.value}: {record.sample_id}"
+            )
         grouped[record.control][record.sample_id] = record
     return dict(grouped)
 
 
-def _validate_paired_sample_ids(grouped: Mapping[ControlCondition, Mapping[str, PredictionRecord]]) -> None:
+def _validate_paired_sample_ids(
+    grouped: Mapping[ControlCondition, Mapping[str, PredictionRecord]],
+) -> None:
     full_ids = set(grouped[ControlCondition.FULL])
     for condition, records in grouped.items():
         if set(records) != full_ids:
@@ -154,7 +164,9 @@ def _resolve_references(
         inline = full_record.reference_text
         supplied = None if external is None else external.get(sample_id)
         if inline is not None and supplied is not None and inline != supplied:
-            raise ValueError(f"conflicting inline and supplied reference for sample_id: {sample_id}")
+            raise ValueError(
+                f"conflicting inline and supplied reference for sample_id: {sample_id}"
+            )
         reference = inline if inline is not None else supplied
         if reference is None:
             raise ValueError(f"missing reference for sample_id: {sample_id}")

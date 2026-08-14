@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
+import json
+import re
 from collections import Counter
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
-import json
 from pathlib import Path
-import re
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from .schema import NeuralTextSample
-
 
 TOKENIZER_VERSION = "1.0"
 TOKENIZER_KIND = "openthought2text.train_text_tokenizer"
@@ -151,7 +151,7 @@ class TrainTextTokenizer:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "TrainTextTokenizer":
+    def from_dict(cls, data: Mapping[str, Any]) -> TrainTextTokenizer:
         if data.get("kind") != TOKENIZER_KIND:
             raise ValueError("not an OpenThought2Text train text tokenizer artifact")
         special_ids = data.get("special_ids")
@@ -194,10 +194,14 @@ def fit_train_text_tokenizer(
         raise ValueError("cannot fit a tokenizer without samples")
     non_train = [sample.sample_id for sample in rows if sample.split != "train"]
     if non_train:
-        raise ValueError("tokenizer fit received non-train samples: " + ", ".join(sorted(non_train)))
+        raise ValueError(
+            "tokenizer fit received non-train samples: " + ", ".join(sorted(non_train))
+        )
     missing_target = [sample.sample_id for sample in rows if sample.target is None]
     if missing_target:
-        raise ValueError("tokenizer fit needs target text for: " + ", ".join(sorted(missing_target)))
+        raise ValueError(
+            "tokenizer fit needs target text for: " + ", ".join(sorted(missing_target))
+        )
     sample_ids = [sample.sample_id for sample in rows]
     if len(sample_ids) != len(set(sample_ids)):
         raise ValueError("tokenizer fit sample IDs must be unique")
@@ -212,7 +216,9 @@ def fit_train_text_tokenizer(
         vocabulary=_SPECIAL_TOKENS + ordered_tokens,
         unknown_policy=policy,
         fit_sample_ids=tuple(sorted(sample_ids)),
-        fit_text_checksum=_canonical_hash({"train_targets": sorted(fingerprint_rows, key=lambda row: row["sample_id"])}),
+        fit_text_checksum=_canonical_hash(
+            {"train_targets": sorted(fingerprint_rows, key=lambda row: row["sample_id"])}
+        ),
     )
 
 

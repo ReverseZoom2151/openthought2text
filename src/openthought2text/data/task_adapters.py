@@ -6,15 +6,15 @@ They deliberately never deserialize participant recordings or labels.
 
 from __future__ import annotations
 
+import json
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
-import json
 from pathlib import Path
-from typing import Any, Iterator, Mapping
+from typing import Any
 
 from .manifest import DatasetManifest
 from .schema import InformationAccess, Modality, NeuralTextSample
-
 
 DESCRIPTOR_NAME = "task_adapter.json"
 DESCRIPTOR_KIND = "openthought2text.task_dataset_descriptor"
@@ -93,14 +93,22 @@ class TypedTaskDiscoveryAdapter:
             return TaskDiscoveryReport(
                 root,
                 self.requirements,
-                issues=(TaskDiscoveryIssue("MISSING_DATASET_DIRECTORY", "dataset root is not a directory", root),),
+                issues=(
+                    TaskDiscoveryIssue(
+                        "MISSING_DATASET_DIRECTORY", "dataset root is not a directory", root
+                    ),
+                ),
             )
         descriptor_path = root / DESCRIPTOR_NAME
         if not descriptor_path.is_file():
             return TaskDiscoveryReport(
                 root,
                 self.requirements,
-                issues=(TaskDiscoveryIssue("MISSING_TASK_DESCRIPTOR", "task_adapter.json is required", descriptor_path),),
+                issues=(
+                    TaskDiscoveryIssue(
+                        "MISSING_TASK_DESCRIPTOR", "task_adapter.json is required", descriptor_path
+                    ),
+                ),
             )
         try:
             descriptor = json.loads(descriptor_path.read_text(encoding="utf-8"))
@@ -108,25 +116,46 @@ class TypedTaskDiscoveryAdapter:
             return TaskDiscoveryReport(
                 root,
                 self.requirements,
-                issues=(TaskDiscoveryIssue("INVALID_TASK_DESCRIPTOR_JSON", str(error), descriptor_path),),
+                issues=(
+                    TaskDiscoveryIssue("INVALID_TASK_DESCRIPTOR_JSON", str(error), descriptor_path),
+                ),
             )
         if not isinstance(descriptor, dict):
             return TaskDiscoveryReport(
                 root,
                 self.requirements,
-                issues=(TaskDiscoveryIssue("INVALID_TASK_DESCRIPTOR", "descriptor must be a JSON object", descriptor_path),),
+                issues=(
+                    TaskDiscoveryIssue(
+                        "INVALID_TASK_DESCRIPTOR",
+                        "descriptor must be a JSON object",
+                        descriptor_path,
+                    ),
+                ),
             )
         issues = self._validate_descriptor(root, descriptor)
         return TaskDiscoveryReport(root, self.requirements, descriptor, tuple(issues))
 
-    def _validate_descriptor(self, root: Path, descriptor: Mapping[str, Any]) -> list[TaskDiscoveryIssue]:
+    def _validate_descriptor(
+        self, root: Path, descriptor: Mapping[str, Any]
+    ) -> list[TaskDiscoveryIssue]:
         issues: list[TaskDiscoveryIssue] = []
         if descriptor.get("kind") != DESCRIPTOR_KIND:
-            issues.append(TaskDiscoveryIssue("INVALID_DESCRIPTOR_KIND", "descriptor kind is not recognized"))
-        if not isinstance(descriptor.get("dataset_id"), str) or not descriptor["dataset_id"].strip():
-            issues.append(TaskDiscoveryIssue("MISSING_DATASET_ID", "descriptor dataset_id is required"))
+            issues.append(
+                TaskDiscoveryIssue("INVALID_DESCRIPTOR_KIND", "descriptor kind is not recognized")
+            )
+        if (
+            not isinstance(descriptor.get("dataset_id"), str)
+            or not descriptor["dataset_id"].strip()
+        ):
+            issues.append(
+                TaskDiscoveryIssue("MISSING_DATASET_ID", "descriptor dataset_id is required")
+            )
         if descriptor.get("task") != self.requirements.task:
-            issues.append(TaskDiscoveryIssue("TASK_MISMATCH", f"descriptor task must be {self.requirements.task!r}"))
+            issues.append(
+                TaskDiscoveryIssue(
+                    "TASK_MISMATCH", f"descriptor task must be {self.requirements.task!r}"
+                )
+            )
         try:
             modality = Modality(descriptor.get("modality"))
         except ValueError:
@@ -134,7 +163,9 @@ class TypedTaskDiscoveryAdapter:
         else:
             if modality not in self.requirements.allowed_modalities:
                 allowed = ", ".join(item.value for item in self.requirements.allowed_modalities)
-                issues.append(TaskDiscoveryIssue("MODALITY_MISMATCH", f"allowed modalities: {allowed}"))
+                issues.append(
+                    TaskDiscoveryIssue("MODALITY_MISMATCH", f"allowed modalities: {allowed}")
+                )
         self._validate_label_access(descriptor.get("label_access"), issues)
         self._validate_splits(descriptor.get("splits"), issues)
         self._validate_alignment(descriptor.get("alignment_source"), issues)
@@ -142,7 +173,11 @@ class TypedTaskDiscoveryAdapter:
             path = root / relative_path
             exists = path.is_dir() if expected_kind == "directory" else path.is_file()
             if not exists:
-                issues.append(TaskDiscoveryIssue("MISSING_REQUIRED_PATH", f"expected {expected_kind}: {relative_path}", path))
+                issues.append(
+                    TaskDiscoveryIssue(
+                        "MISSING_REQUIRED_PATH", f"expected {expected_kind}: {relative_path}", path
+                    )
+                )
         for key, expected_kind in (("recordings_dir", "directory"), ("split_manifest", "file")):
             try:
                 path = _local_relative_path(root, descriptor.get(key), key)
@@ -151,32 +186,48 @@ class TypedTaskDiscoveryAdapter:
                 continue
             exists = path.is_dir() if expected_kind == "directory" else path.is_file()
             if not exists:
-                issues.append(TaskDiscoveryIssue("MISSING_DECLARED_PATH", f"descriptor {key} is not a {expected_kind}", path))
+                issues.append(
+                    TaskDiscoveryIssue(
+                        "MISSING_DECLARED_PATH", f"descriptor {key} is not a {expected_kind}", path
+                    )
+                )
         return issues
 
     @staticmethod
     def _validate_label_access(value: object, issues: list[TaskDiscoveryIssue]) -> None:
         if not isinstance(value, Mapping):
-            issues.append(TaskDiscoveryIssue("MISSING_LABEL_ACCESS", "label_access object is required"))
+            issues.append(
+                TaskDiscoveryIssue("MISSING_LABEL_ACCESS", "label_access object is required")
+            )
             return
         expected = {"train_targets": True, "validation_targets": True, "inference_targets": False}
         if any(value.get(key) is not expected_value for key, expected_value in expected.items()):
-            issues.append(TaskDiscoveryIssue("LABEL_ACCESS_VIOLATION", "labels must be unavailable at inference"))
+            issues.append(
+                TaskDiscoveryIssue(
+                    "LABEL_ACCESS_VIOLATION", "labels must be unavailable at inference"
+                )
+            )
 
     @staticmethod
     def _validate_splits(value: object, issues: list[TaskDiscoveryIssue]) -> None:
         if not isinstance(value, Mapping):
-            issues.append(TaskDiscoveryIssue("MISSING_SPLIT_DISCLOSURE", "splits object is required"))
+            issues.append(
+                TaskDiscoveryIssue("MISSING_SPLIT_DISCLOSURE", "splits object is required")
+            )
             return
         if not isinstance(value.get("protocol"), str) or not value["protocol"].strip():
-            issues.append(TaskDiscoveryIssue("MISSING_SPLIT_PROTOCOL", "splits.protocol is required"))
+            issues.append(
+                TaskDiscoveryIssue("MISSING_SPLIT_PROTOCOL", "splits.protocol is required")
+            )
         if not isinstance(value.get("unit"), str) or not value["unit"].strip():
             issues.append(TaskDiscoveryIssue("MISSING_SPLIT_UNIT", "splits.unit is required"))
 
     @staticmethod
     def _validate_alignment(value: object, issues: list[TaskDiscoveryIssue]) -> None:
         if not isinstance(value, str) or not value.strip():
-            issues.append(TaskDiscoveryIssue("MISSING_ALIGNMENT_SOURCE", "alignment_source is required"))
+            issues.append(
+                TaskDiscoveryIssue("MISSING_ALIGNMENT_SOURCE", "alignment_source is required")
+            )
 
     def validate(self, source: str) -> TaskDiscoveryReport:
         return self.discover(source)

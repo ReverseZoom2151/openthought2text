@@ -13,9 +13,16 @@ from openthought2text.models import (
 
 def _model() -> NeuralToTextModel:
     return NeuralToTextModel(
-        encoder=ContinuousNeuralEncoder(hidden_size=12, num_heads=3, num_layers=1, stride_samples=4, dropout=0),
+        encoder=ContinuousNeuralEncoder(
+            hidden_size=12, num_heads=3, num_layers=1, stride_samples=4, dropout=0
+        ),
         decoder=TargetFreeAutoregressiveDecoder(
-            vocab_size=11, hidden_size=12, num_heads=3, num_layers=1, max_sequence_length=10, dropout=0
+            vocab_size=11,
+            hidden_size=12,
+            num_heads=3,
+            num_layers=1,
+            max_sequence_length=10,
+            dropout=0,
         ),
         semantic_anchor_head=SemanticAnchorHead(hidden_size=12, num_anchors=4),
     ).eval()
@@ -43,7 +50,12 @@ def test_composed_generate_is_target_free_and_returns_evidence():
     signals = torch.randn(1, 2, 20)
     signature = inspect.signature(model.generate)
     assert set(signature.parameters) == {
-        "signals", "channel_mask", "coordinates", "token_mask", "config", "sample_rate_hz"
+        "signals",
+        "channel_mask",
+        "coordinates",
+        "token_mask",
+        "config",
+        "sample_rate_hz",
     }
     result = model.generate(
         signals,

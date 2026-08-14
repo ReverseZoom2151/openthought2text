@@ -6,14 +6,13 @@ LaBraM checkpoints nor asserts compatibility with any external implementation.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 
 import torch
 
 from .prepared import TensorBackedSample
-
 
 LABRAM_INPUT_PATCH_VERSION = "1.0"
 
@@ -71,7 +70,10 @@ class PatchedNeuralInput:
         patch_count, channels, patch_size = self.patches.shape
         if self.channel_mask.dtype != torch.bool or self.channel_mask.shape != (channels,):
             raise ValueError("channel_mask must be bool with shape [channels]")
-        if self.patch_time_mask.dtype != torch.bool or self.patch_time_mask.shape != (patch_count, patch_size):
+        if self.patch_time_mask.dtype != torch.bool or self.patch_time_mask.shape != (
+            patch_count,
+            patch_size,
+        ):
             raise ValueError("patch_time_mask must be bool with shape [patches, patch_time]")
         if self.patch_mask.dtype != torch.bool or self.patch_mask.shape != (patch_count,):
             raise ValueError("patch_mask must be bool with shape [patches]")

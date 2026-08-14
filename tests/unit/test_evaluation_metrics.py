@@ -24,9 +24,7 @@ def test_word_error_rate_aggregates_counts_not_example_means() -> None:
 
 
 def test_retrieval_metrics_use_conservative_tie_rank() -> None:
-    report = retrieval_metrics(
-        [[0.9, 0.1, 0.2], [0.5, 0.5, 0.1]], [0, 0], ks=(1, 2, 5)
-    )
+    report = retrieval_metrics([[0.9, 0.1, 0.2], [0.5, 0.5, 0.1]], [0, 0], ks=(1, 2, 5))
     assert report.queries == 2
     assert report.mean_rank == 1.5  # tie gets rank two
     assert report.mean_reciprocal_rank == 0.75

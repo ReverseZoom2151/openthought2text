@@ -7,16 +7,15 @@ This keeps discovery safe for portable, restricted research artifacts.
 
 from __future__ import annotations
 
+import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
 from pathlib import Path
-import re
-from typing import Iterator
 
 from .manifest import DatasetManifest, load_manifest
 from .schema import NeuralTextSample, SchemaError
-
 
 _CHECKSUM_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _MANIFEST_NAMES = ("manifest.jsonl", "dataset_manifest.jsonl", "features_manifest.jsonl")

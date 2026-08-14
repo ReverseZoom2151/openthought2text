@@ -1,17 +1,12 @@
 """Dependency-light model primitives for OpenThought2Text."""
 
-from .channels import CoordinateChannelMerger
-from .ctc_beam_search import (
-    CTCBeamHypothesis,
-    CTCBeamSearchConfig,
-    CTCBeamSearchOutput,
-    TargetFreeCTCBeamSearch,
-    ValidationFittedLanguageScorer,
-)
-from .checkpoint import (
-    CheckpointArchitectureCompatibility,
-    checkpoint_architecture_metadata,
-    validate_checkpoint_architecture,
+from .adaptation_contracts import (
+    LoRAAdapterConfig,
+    LoRAAdapterContract,
+    LoRAProvenance,
+    LoRAScheduleConfig,
+    NeuralFeatureProjector,
+    NeuralProjectorConfig,
 )
 from .alignment import (
     ContrastiveAlignmentOutput,
@@ -19,15 +14,27 @@ from .alignment import (
     SemanticPoolingOutput,
     SemanticQueryPooler,
 )
-from .adaptation_contracts import LoRAAdapterConfig, LoRAAdapterContract, LoRAProvenance, LoRAScheduleConfig, NeuralFeatureProjector, NeuralProjectorConfig
+from .baselines import ChannelNetNeuralEncoder, CompactConformerNeuralEncoder, GRUNeuralEncoder
+from .bottleneck import NeuralRepresentationBottleneck, NeuralRepresentationBottleneckOutput
 from .candidate_ranking import (
     CandidateRankingOutput,
     CandidateRankingTrainingOutput,
     EvidenceGroundedCandidateRanker,
     MaskedCandidateRankingLoss,
 )
-from .bottleneck import NeuralRepresentationBottleneck, NeuralRepresentationBottleneckOutput
-from .baselines import ChannelNetNeuralEncoder, CompactConformerNeuralEncoder, GRUNeuralEncoder
+from .channels import CoordinateChannelMerger
+from .checkpoint import (
+    CheckpointArchitectureCompatibility,
+    checkpoint_architecture_metadata,
+    validate_checkpoint_architecture,
+)
+from .ctc_beam_search import (
+    CTCBeamHypothesis,
+    CTCBeamSearchConfig,
+    CTCBeamSearchOutput,
+    TargetFreeCTCBeamSearch,
+    ValidationFittedLanguageScorer,
+)
 from .decoder import DecoderGenerationConfig, DecoderTrainingOutput, TargetFreeAutoregressiveDecoder
 from .distillation import (
     ReducedChannelDistillationConfig,
@@ -40,18 +47,18 @@ from .domain_adversarial import (
     gradient_reverse,
 )
 from .encoder import ContinuousNeuralEncoder
-from .factory import (
-    NeuralToTextModelConfig,
-    architecture_fingerprint,
-    build_neural_to_text_model,
-    describe_model_architecture,
-)
 from .factorized_scoring import (
     EvidenceFactorizedCandidateScorer,
     FactorizedCandidateScoringOutput,
     FactorizedScoringControl,
     ValidationFittedScoreWeights,
     fit_factorized_score_weights,
+)
+from .factory import (
+    NeuralToTextModelConfig,
+    architecture_fingerprint,
+    build_neural_to_text_model,
+    describe_model_architecture,
 )
 from .foundation_wrapper import (
     FoundationEncoderWrapper,
@@ -65,14 +72,22 @@ from .heads import (
     SemanticAnchorOutput,
     greedy_ctc_decode,
 )
-from .model import NeuralToTextGenerationOutput, NeuralToTextModel, NeuralToTextTrainingOutput
-from .montage import GraphMontageAdapter
-from .multitask import BalancedTaskSchedule, GradientConflictLog, MultiParadigmTaskConfig, MultiParadigmTaskHead, MultiTaskTrainingOutput, TaskTrackConfig, gradient_conflict_log
 from .masked_token_pretraining import (
     MaskedNeuralTokenConfig,
     MaskedNeuralTokenObjectiveOutput,
     MaskedNeuralTokenPredictionObjective,
     select_mask_positions,
+)
+from .model import NeuralToTextGenerationOutput, NeuralToTextModel, NeuralToTextTrainingOutput
+from .montage import GraphMontageAdapter
+from .multitask import (
+    BalancedTaskSchedule,
+    GradientConflictLog,
+    MultiParadigmTaskConfig,
+    MultiParadigmTaskHead,
+    MultiTaskTrainingOutput,
+    TaskTrackConfig,
+    gradient_conflict_log,
 )
 from .residual_quantizer import (
     ResidualVectorQuantizer,
@@ -85,7 +100,13 @@ from .self_supervision import (
     NeuralSelfSupervisionConfig,
     NeuralSelfSupervisionOutput,
 )
-from .semantic_anchor_decoder import OrderedSemanticAnchorDecoder, OrderedSemanticAnchorDecoderConfig, OrderedSemanticAnchorGenerationConfig, OrderedSemanticAnchorGenerationOutput, OrderedSemanticAnchorTrainingOutput
+from .semantic_anchor_decoder import (
+    OrderedSemanticAnchorDecoder,
+    OrderedSemanticAnchorDecoderConfig,
+    OrderedSemanticAnchorGenerationConfig,
+    OrderedSemanticAnchorGenerationOutput,
+    OrderedSemanticAnchorTrainingOutput,
+)
 from .subject import SubjectAdapter, SubjectAdapterMode
 from .tokenizer import (
     CodebookHealth,

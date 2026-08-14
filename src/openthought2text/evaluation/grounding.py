@@ -16,9 +16,7 @@ class GroundingReport:
     higher_is_better: bool
 
 
-def _best_control(
-    control_scores: Mapping[str, float], higher_is_better: bool
-) -> tuple[str, float]:
+def _best_control(control_scores: Mapping[str, float], higher_is_better: bool) -> tuple[str, float]:
     if not control_scores:
         raise ValueError("at least one control score is required")
     chooser = max if higher_is_better else min
@@ -52,9 +50,7 @@ def build_grounding_report(
     gain, strongest_name, strongest_score = grounded_gain(
         full_score, control_scores, higher_is_better=higher_is_better
     )
-    contribution = (
-        full_score - shuffled_score if higher_is_better else shuffled_score - full_score
-    )
+    contribution = full_score - shuffled_score if higher_is_better else shuffled_score - full_score
     return GroundingReport(
         full_score=full_score,
         strongest_control=strongest_name,

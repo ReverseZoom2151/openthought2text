@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import json
+from hashlib import sha256
 
 import pytest
 
@@ -45,12 +45,16 @@ def descriptor_for(manifest, root):
         "mappings": mappings,
     }
     descriptor["checksum"] = sha256(
-        json.dumps(descriptor, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+        json.dumps(descriptor, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode(
+            "utf-8"
+        )
     ).hexdigest()
     return descriptor
 
 
-def test_authorized_json_feature_loader_maps_canonical_samples_without_raw_parsing(tmp_path) -> None:
+def test_authorized_json_feature_loader_maps_canonical_samples_without_raw_parsing(
+    tmp_path,
+) -> None:
     manifest = SyntheticNeuralTextAdapter().generate(str(tmp_path))
     descriptor = descriptor_for(manifest, tmp_path)
 
@@ -67,7 +71,12 @@ def test_authorized_json_feature_audit_rejects_nontrain_fit_and_manifest_mismatc
     descriptor = descriptor_for(manifest, tmp_path)
     descriptor["train_only_audit"]["fit_sample_ids"] = ["synthetic-01-000"]
     descriptor["checksum"] = sha256(
-        json.dumps({key: value for key, value in descriptor.items() if key != "checksum"}, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+        json.dumps(
+            {key: value for key, value in descriptor.items() if key != "checksum"},
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        ).encode("utf-8")
     ).hexdigest()
 
     report = audit_authorized_json_features(manifest, descriptor)
@@ -85,7 +94,12 @@ def test_authorized_json_feature_loader_rejects_tampering_and_nonjson_references
     descriptor = descriptor_for(manifest, tmp_path)
     descriptor["mappings"][0]["uri"] = "features/not-json.pt"
     descriptor["checksum"] = sha256(
-        json.dumps({key: value for key, value in descriptor.items() if key != "checksum"}, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+        json.dumps(
+            {key: value for key, value in descriptor.items() if key != "checksum"},
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        ).encode("utf-8")
     ).hexdigest()
     with pytest.raises(ValueError, match="JSON array"):
         load_authorized_json_features(manifest, tmp_path, descriptor)

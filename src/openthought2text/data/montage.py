@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
 import math
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, replace
 
 import torch
 
@@ -32,7 +32,9 @@ class NamedMontage:
         for name in self.channel_names:
             coordinate = self.coordinates[name]
             if len(coordinate) != 3 or any(not math.isfinite(float(value)) for value in coordinate):
-                raise ValueError(f"montage coordinate for {name!r} must contain three finite values")
+                raise ValueError(
+                    f"montage coordinate for {name!r} must contain three finite values"
+                )
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -81,7 +83,9 @@ def select_named_montage(
             raise ValueError(
                 f"sample {row.sample.sample_id} lacks montage channels: {', '.join(missing)}"
             )
-        indices = torch.tensor([index_by_name[name] for name in montage.channel_names], dtype=torch.long)
+        indices = torch.tensor(
+            [index_by_name[name] for name in montage.channel_names], dtype=torch.long
+        )
         signal = SignalReference(
             uri=row.sample.signal.uri,
             recording_id=row.sample.signal.recording_id,
@@ -96,12 +100,16 @@ def select_named_montage(
             signal=signal,
             metadata={**row.sample.metadata, "montage": montage.name},
         )
-        selected.append(TensorBackedSample(
-            sample=sample,
-            values=row.values.index_select(0, indices.to(row.values.device)),
-            channel_mask=row.resolved_channel_mask.index_select(0, indices.to(row.values.device)),
-            time_mask=row.resolved_time_mask,
-        ))
+        selected.append(
+            TensorBackedSample(
+                sample=sample,
+                values=row.values.index_select(0, indices.to(row.values.device)),
+                channel_mask=row.resolved_channel_mask.index_select(
+                    0, indices.to(row.values.device)
+                ),
+                time_mask=row.resolved_time_mask,
+            )
+        )
         original_counts.append(row.values.shape[0])
     provenance = MontageProvenance(
         montage=montage,

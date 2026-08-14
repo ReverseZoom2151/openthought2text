@@ -7,8 +7,8 @@ deterministic encoder-evidence path only and never loads/deserializes artifacts.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,6 @@ from torch import nn
 
 from .checkpoint import checkpoint_architecture_metadata
 from .model import NeuralToTextModel
-
 
 TORCHSCRIPT_SCOPE_NEURAL_ENCODER_EVIDENCE = "neural_encoder_evidence_v1"
 

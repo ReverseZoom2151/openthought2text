@@ -30,15 +30,15 @@ def test_structure_only_controls_expose_only_declared_side_information() -> None
         [[1.0, 0.0, 1.0], [1.0, 0.0, 1.0]]
     ]
     assert length_only_signal([2, 1], channels=1, max_length=3) == [
-        [[1.0, 1.0, 0.0]], [[1.0, 0.0, 0.0]]
+        [[1.0, 1.0, 0.0]],
+        [[1.0, 0.0, 0.0]],
     ]
     assert timing_only_signal([[0, 3], [1]], time_steps=4, channels=1) == [
-        [[1.0, 0.0, 0.0, 1.0]], [[0.0, 1.0, 0.0, 0.0]]
+        [[1.0, 0.0, 0.0, 1.0]],
+        [[0.0, 1.0, 0.0, 0.0]],
     ]
 
 
 def test_named_control_dispatcher_requires_declared_metadata() -> None:
     assert build_control(ControlCondition.ZERO, [[3.0]]) == [[0.0]]
-    assert build_control("length", [[3.0]], valid_lengths=[1], time_steps=2) == [
-        [[1.0, 0.0]]
-    ]
+    assert build_control("length", [[3.0]], valid_lengths=[1], time_steps=2) == [[[1.0, 0.0]]]

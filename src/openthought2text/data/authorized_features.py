@@ -9,12 +9,13 @@ was restricted to train data.
 
 from __future__ import annotations
 
+import json
+import re
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-import re
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import torch
 
@@ -22,7 +23,6 @@ from .json_signals import ManifestSplit, select_split_samples
 from .manifest import DatasetManifest
 from .prepared import TensorBackedSample
 from .schema import NeuralTextSample
-
 
 AUTHORIZED_FEATURE_KIND = "openthought2text.authorized_json_feature_artifact"
 AUTHORIZED_FEATURE_VERSION = "1.0"
@@ -46,7 +46,7 @@ class AuthorizedFeatureMapping:
     checksum_sha256: str
 
     @classmethod
-    def from_dict(cls, value: Mapping[str, Any]) -> "AuthorizedFeatureMapping":
+    def from_dict(cls, value: Mapping[str, Any]) -> AuthorizedFeatureMapping:
         mapping = cls(
             sample_id=str(value["sample_id"]),
             split=str(value["split"]),
@@ -80,7 +80,7 @@ class AuthorizedFeatureArtifact:
     version: str = AUTHORIZED_FEATURE_VERSION
 
     @classmethod
-    def from_dict(cls, value: Mapping[str, Any]) -> "AuthorizedFeatureArtifact":
+    def from_dict(cls, value: Mapping[str, Any]) -> AuthorizedFeatureArtifact:
         if value.get("kind") != AUTHORIZED_FEATURE_KIND:
             raise ValueError("artifact kind is not an authorized JSON feature artifact")
         if value.get("version") != AUTHORIZED_FEATURE_VERSION:
@@ -97,8 +97,10 @@ class AuthorizedFeatureArtifact:
         if not isinstance(audit, Mapping) or audit.get("fit_split") != "train":
             raise ValueError("artifact train_only_audit.fit_split must be 'train'")
         fit_sample_ids = audit.get("fit_sample_ids")
-        if not isinstance(fit_sample_ids, list) or not fit_sample_ids or not all(
-            isinstance(item, str) and item for item in fit_sample_ids
+        if (
+            not isinstance(fit_sample_ids, list)
+            or not fit_sample_ids
+            or not all(isinstance(item, str) and item for item in fit_sample_ids)
         ):
             raise ValueError("artifact train_only_audit.fit_sample_ids must be non-empty strings")
         if len(fit_sample_ids) != len(set(fit_sample_ids)):
@@ -147,14 +149,23 @@ class ArtifactAuditReport:
 
 
 def _manifest_checksum(manifest: DatasetManifest) -> str:
-    payload = {"header": manifest.header_dict(), "samples": [row.to_dict() for row in manifest.samples]}
+    payload = {
+        "header": manifest.header_dict(),
+        "samples": [row.to_dict() for row in manifest.samples],
+    }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     return sha256(encoded.encode("utf-8")).hexdigest()
 
 
 def _safe_path(root: Path, uri: str) -> Path:
     candidate = Path(uri)
-    if not uri or candidate.is_absolute() or ".." in candidate.parts or "://" in uri or uri.startswith("file:"):
+    if (
+        not uri
+        or candidate.is_absolute()
+        or ".." in candidate.parts
+        or "://" in uri
+        or uri.startswith("file:")
+    ):
         raise ValueError("feature URI must be a local relative path")
     path = (root / candidate).resolve()
     try:
@@ -172,7 +183,9 @@ def _json_matrix(path: Path, sample: NeuralTextSample) -> torch.Tensor:
     except (OSError, json.JSONDecodeError) as error:
         raise ValueError(f"sample {sample.sample_id} feature JSON is invalid") from error
     if not isinstance(value, list) or len(value) != sample.signal.channel_count:
-        raise ValueError(f"sample {sample.sample_id} feature JSON must be [expected_channels, time]")
+        raise ValueError(
+            f"sample {sample.sample_id} feature JSON must be [expected_channels, time]"
+        )
     rows: list[list[float]] = []
     width: int | None = None
     for channel in value:
@@ -197,23 +210,51 @@ def audit_authorized_json_features(
     try:
         artifact = AuthorizedFeatureArtifact.from_dict(descriptor)
     except (KeyError, TypeError, ValueError) as error:
-        return ArtifactAuditReport(None, (ArtifactAuditIssue("INVALID_ARTIFACT_DESCRIPTOR", str(error)),))
+        return ArtifactAuditReport(
+            None, (ArtifactAuditIssue("INVALID_ARTIFACT_DESCRIPTOR", str(error)),)
+        )
     issues: list[ArtifactAuditIssue] = []
     if artifact.source_manifest_checksum != _manifest_checksum(manifest):
-        issues.append(ArtifactAuditIssue("SOURCE_MANIFEST_MISMATCH", "artifact was not built for this manifest"))
+        issues.append(
+            ArtifactAuditIssue(
+                "SOURCE_MANIFEST_MISMATCH", "artifact was not built for this manifest"
+            )
+        )
     sample_by_id = {sample.sample_id: sample for sample in manifest.samples}
     for sample_id in artifact.fit_sample_ids:
         sample = sample_by_id.get(sample_id)
         if sample is None:
-            issues.append(ArtifactAuditIssue("UNKNOWN_FIT_SAMPLE", "fit sample is absent from manifest", sample_id))
+            issues.append(
+                ArtifactAuditIssue(
+                    "UNKNOWN_FIT_SAMPLE", "fit sample is absent from manifest", sample_id
+                )
+            )
         elif sample.split != "train":
-            issues.append(ArtifactAuditIssue("NONTRAIN_FIT_SAMPLE", "fitted processing included a non-train sample", sample_id))
+            issues.append(
+                ArtifactAuditIssue(
+                    "NONTRAIN_FIT_SAMPLE",
+                    "fitted processing included a non-train sample",
+                    sample_id,
+                )
+            )
     for mapping in artifact.mappings:
         sample = sample_by_id.get(mapping.sample_id)
         if sample is None:
-            issues.append(ArtifactAuditIssue("UNKNOWN_MAPPED_SAMPLE", "mapping sample is absent from manifest", mapping.sample_id))
+            issues.append(
+                ArtifactAuditIssue(
+                    "UNKNOWN_MAPPED_SAMPLE",
+                    "mapping sample is absent from manifest",
+                    mapping.sample_id,
+                )
+            )
         elif sample.split != mapping.split:
-            issues.append(ArtifactAuditIssue("SPLIT_MAPPING_MISMATCH", "mapping split differs from canonical manifest", mapping.sample_id))
+            issues.append(
+                ArtifactAuditIssue(
+                    "SPLIT_MAPPING_MISMATCH",
+                    "mapping split differs from canonical manifest",
+                    mapping.sample_id,
+                )
+            )
     return ArtifactAuditReport(artifact, tuple(issues))
 
 
@@ -242,6 +283,8 @@ def load_authorized_json_features(
         if not path.is_file():
             raise ValueError(f"sample {sample.sample_id} authorized feature file is missing")
         if sha256(path.read_bytes()).hexdigest() != mapping.checksum_sha256:
-            raise ValueError(f"sample {sample.sample_id} authorized feature checksum does not match")
+            raise ValueError(
+                f"sample {sample.sample_id} authorized feature checksum does not match"
+            )
         loaded.append(TensorBackedSample(sample=sample, values=_json_matrix(path, sample)))
     return tuple(loaded)

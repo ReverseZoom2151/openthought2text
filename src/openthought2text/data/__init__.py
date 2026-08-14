@@ -7,82 +7,10 @@ model or a split definition.
 
 from .adapters import AdapterRegistry, DatasetAdapter
 from .audit import AuditFinding, AuditReport, PretrainingExposure, audit_splits
-from .manifest import DatasetManifest, load_manifest, write_manifest
-from .schema import (
-    InformationAccess,
-    Modality,
-    NeuralTextSample,
-    SignalReference,
-    TextTarget,
-    TimeInterval,
-)
-from .synthetic import SyntheticNeuralTextAdapter, SyntheticValidationReport
-from .prepared import (
-    ChannelNormalizer,
-    PreparedArtifactManifest,
-    PreparedTensorRecord,
-    TensorBackedSample,
-    build_prepared_artifact_manifest,
-    fit_train_channel_normalizer,
-    load_prepared_artifact_manifest,
-    tensor_checksum,
-    write_prepared_artifact_manifest,
-)
-from .batching import (
-    NeuralTensorBatch,
-    VariableLengthTensorDataset,
-    collate_tensor_backed_samples,
-)
-from .zuco import (
-    ZuCoDiscoveryAdapter,
-    ZuCoDiscoveryReport,
-    ZuCoLayoutIssue,
-    ZuCoLayoutSeverity,
-    ZuCoTaskInventory,
-)
-from .zuco_precomputed import (
-    ZuCoFeatureArtifactReport,
-    ZuCoFeatureIssue,
-    ZuCoFeatureSeverity,
-    ZuCoPrecomputedFeatureAdapter,
-)
-from .splits import (
-    SplitPlan,
-    SplitProtocol,
-    SplitValidationReport,
-    SplitViolation,
-    build_split_plan,
-    validate_split_plan,
-)
-from .tokenizer import (
-    TrainTextTokenizer,
-    UnknownTokenPolicy,
-    fit_train_text_tokenizer,
-    load_train_text_tokenizer,
-    tokenize_text,
-    write_train_text_tokenizer,
-)
-from .json_signals import (
-    ManifestSplit,
-    load_json_tensor_samples,
-    select_split_samples,
-)
-from .dataset_card import (
-    DatasetCard,
-    DatasetCardIssue,
-    DatasetCardValidationReport,
-    load_dataset_card,
-    validate_dataset_card,
-    write_dataset_card,
-)
-from .task_adapters import (
-    Brain2QwertyDiscoveryAdapter,
-    LabelAccess,
-    T15DiscoveryAdapter,
-    TaskAdapterRequirements,
-    TaskDiscoveryIssue,
-    TaskDiscoveryReport,
-    TypedTaskDiscoveryAdapter,
+from .augmentation import (
+    NeuralAugmentationConfig,
+    augment_neural_tensor_batch,
+    augment_tensor_backed_samples,
 )
 from .authorized_features import (
     AUTHORIZED_FEATURE_KIND,
@@ -93,6 +21,59 @@ from .authorized_features import (
     AuthorizedFeatureMapping,
     audit_authorized_json_features,
     load_authorized_json_features,
+)
+from .batching import (
+    NeuralTensorBatch,
+    VariableLengthTensorDataset,
+    collate_tensor_backed_samples,
+)
+from .continuous_chunks import (
+    SIGNAL_TIMELINE_ALIGNMENT,
+    ContinuousChunkProvenance,
+    ContinuousChunkView,
+    build_continuous_chunk_view,
+)
+from .dataset_card import (
+    DatasetCard,
+    DatasetCardIssue,
+    DatasetCardValidationReport,
+    load_dataset_card,
+    validate_dataset_card,
+    write_dataset_card,
+)
+from .json_signals import (
+    ManifestSplit,
+    load_json_tensor_samples,
+    select_split_samples,
+)
+from .labram_patching import (
+    LABRAM_INPUT_PATCH_VERSION,
+    LaBraMInputPatchConfig,
+    PatchedNeuralInput,
+    patch_tensor_backed_sample,
+)
+from .manifest import DatasetManifest, load_manifest, write_manifest
+from .montage import MontageProvenance, NamedMontage, select_named_montage
+from .preflight import (
+    PREFLIGHT_PLAN_KIND,
+    PREFLIGHT_PLAN_VERSION,
+    AuthorizedDatasetPreflightPlan,
+    PreflightIssue,
+    PreflightReport,
+    audit_authorized_preflight_plan,
+    build_authorized_preflight_plan,
+    write_authorized_preflight_plan,
+)
+from .prepared import (
+    ChannelNormalizer,
+    PreparedArtifactManifest,
+    PreparedTensorRecord,
+    TensorBackedSample,
+    build_prepared_artifact_manifest,
+    fit_train_channel_normalizer,
+    load_prepared_artifact_manifest,
+    tensor_checksum,
+    write_prepared_artifact_manifest,
 )
 from .release_bundle import (
     RELEASE_BUNDLE_KIND,
@@ -105,17 +86,13 @@ from .release_bundle import (
     build_dataset_release_bundle,
     write_dataset_release_bundle,
 )
-from .montage import MontageProvenance, NamedMontage, select_named_montage
-from .augmentation import (
-    NeuralAugmentationConfig,
-    augment_neural_tensor_batch,
-    augment_tensor_backed_samples,
-)
-from .continuous_chunks import (
-    SIGNAL_TIMELINE_ALIGNMENT,
-    ContinuousChunkProvenance,
-    ContinuousChunkView,
-    build_continuous_chunk_view,
+from .schema import (
+    InformationAccess,
+    Modality,
+    NeuralTextSample,
+    SignalReference,
+    TextTarget,
+    TimeInterval,
 )
 from .sensor_layout import (
     SensorDefinition,
@@ -124,34 +101,23 @@ from .sensor_layout import (
     SensorType,
     sensor_layout_to_tensor,
 )
-from .labram_patching import (
-    LABRAM_INPUT_PATCH_VERSION,
-    LaBraMInputPatchConfig,
-    PatchedNeuralInput,
-    patch_tensor_backed_sample,
+from .splits import (
+    SplitPlan,
+    SplitProtocol,
+    SplitValidationReport,
+    SplitViolation,
+    build_split_plan,
+    validate_split_plan,
 )
-from .preflight import (
-    PREFLIGHT_PLAN_KIND,
-    PREFLIGHT_PLAN_VERSION,
-    AuthorizedDatasetPreflightPlan,
-    PreflightIssue,
-    PreflightReport,
-    audit_authorized_preflight_plan,
-    build_authorized_preflight_plan,
-    write_authorized_preflight_plan,
-)
-from .zuco_raw_plan import (
-    ZUCO_RAW_PLAN_KIND,
-    ZUCO_RAW_PLAN_VERSION,
-    AuthorizedZuCoReader,
-    ZuCoConversionRecord,
-    ZuCoDataQualityIssue,
-    ZuCoDataQualityReport,
-    ZuCoDataQualitySeverity,
-    ZuCoRawConversionPlan,
-    plan_authorized_zuco_raw_conversion,
-    validate_zuco_alignment_records,
-    write_zuco_raw_conversion_plan,
+from .synthetic import SyntheticNeuralTextAdapter, SyntheticValidationReport
+from .task_adapters import (
+    Brain2QwertyDiscoveryAdapter,
+    LabelAccess,
+    T15DiscoveryAdapter,
+    TaskAdapterRequirements,
+    TaskDiscoveryIssue,
+    TaskDiscoveryReport,
+    TypedTaskDiscoveryAdapter,
 )
 from .task_conversion_plans import (
     AuthorizedBrain2QwertyReader,
@@ -167,6 +133,40 @@ from .task_conversion_plans import (
     plan_authorized_t15_conversion,
     validate_brain2qwerty_typed_events,
     validate_t15_descriptor_records,
+)
+from .tokenizer import (
+    TrainTextTokenizer,
+    UnknownTokenPolicy,
+    fit_train_text_tokenizer,
+    load_train_text_tokenizer,
+    tokenize_text,
+    write_train_text_tokenizer,
+)
+from .zuco import (
+    ZuCoDiscoveryAdapter,
+    ZuCoDiscoveryReport,
+    ZuCoLayoutIssue,
+    ZuCoLayoutSeverity,
+    ZuCoTaskInventory,
+)
+from .zuco_precomputed import (
+    ZuCoFeatureArtifactReport,
+    ZuCoFeatureIssue,
+    ZuCoFeatureSeverity,
+    ZuCoPrecomputedFeatureAdapter,
+)
+from .zuco_raw_plan import (
+    ZUCO_RAW_PLAN_KIND,
+    ZUCO_RAW_PLAN_VERSION,
+    AuthorizedZuCoReader,
+    ZuCoConversionRecord,
+    ZuCoDataQualityIssue,
+    ZuCoDataQualityReport,
+    ZuCoDataQualitySeverity,
+    ZuCoRawConversionPlan,
+    plan_authorized_zuco_raw_conversion,
+    validate_zuco_alignment_records,
+    write_zuco_raw_conversion_plan,
 )
 
 __all__ = [

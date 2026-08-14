@@ -98,7 +98,9 @@ def assess_release_evidence(
     policy = policy or ReleaseGatePolicy()
     failures: list[GateFailure] = []
     if evaluation.prediction_count <= 0:
-        failures.append(_failure(GateFailureCode.NO_PREDICTIONS, "evaluation report has no predictions"))
+        failures.append(
+            _failure(GateFailureCode.NO_PREDICTIONS, "evaluation report has no predictions")
+        )
     if evaluation.run_id != provenance.run_id:
         failures.append(
             _failure(
@@ -162,7 +164,10 @@ def _check_generation_audit(
 ) -> None:
     if audit is None:
         failures.append(
-            _failure(GateFailureCode.MISSING_GENERATION_AUDIT, "no target-free generation audit was supplied")
+            _failure(
+                GateFailureCode.MISSING_GENERATION_AUDIT,
+                "no target-free generation audit was supplied",
+            )
         )
         return
     if not audit.signature_is_target_free:

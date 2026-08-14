@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from hashlib import sha256
 import json
+from collections.abc import Mapping
+from hashlib import sha256
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 
 def load_json_config(path: str | Path) -> dict[str, Any]:

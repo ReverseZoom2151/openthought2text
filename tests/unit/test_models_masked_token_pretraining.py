@@ -10,7 +10,9 @@ from openthought2text.models import (
 
 def test_mask_selection_never_selects_padding_and_honors_minimum_per_nonempty_row():
     config = MaskedNeuralTokenConfig(mask_ratio=0.2, minimum_masked_tokens=2)
-    mask = torch.tensor([[True, True, True, False], [True, False, False, False], [False, False, False, False]])
+    mask = torch.tensor(
+        [[True, True, True, False], [True, False, False, False], [False, False, False, False]]
+    )
     selected = select_mask_positions(mask, config, torch.Generator().manual_seed(5))
     assert not (selected & ~mask).any()
     assert selected.sum(dim=1).tolist() == [2, 1, 0]

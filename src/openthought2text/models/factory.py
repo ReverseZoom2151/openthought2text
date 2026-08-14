@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-import json
-from typing import Any, Mapping
+from typing import Any
 
-import torch
 from torch.nn.parameter import UninitializedParameter
 
 from .decoder import TargetFreeAutoregressiveDecoder
@@ -56,11 +56,21 @@ class NeuralToTextModelConfig:
             raise ValueError("vocabulary_size must be at least two")
         if self.hidden_size % self.encoder_heads or self.hidden_size % self.decoder_heads:
             raise ValueError("hidden_size must divide evenly by encoder_heads and decoder_heads")
-        for name, value in {"encoder_dropout": self.encoder_dropout, "decoder_dropout": self.decoder_dropout}.items():
+        for name, value in {
+            "encoder_dropout": self.encoder_dropout,
+            "decoder_dropout": self.decoder_dropout,
+        }.items():
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value < 1:
                 raise ValueError(f"{name} must be a number in [0, 1)")
-        for name, token_id in {"bos_token_id": self.bos_token_id, "pad_token_id": self.pad_token_id}.items():
-            if isinstance(token_id, bool) or not isinstance(token_id, int) or not 0 <= token_id < self.vocabulary_size:
+        for name, token_id in {
+            "bos_token_id": self.bos_token_id,
+            "pad_token_id": self.pad_token_id,
+        }.items():
+            if (
+                isinstance(token_id, bool)
+                or not isinstance(token_id, int)
+                or not 0 <= token_id < self.vocabulary_size
+            ):
                 raise ValueError(f"{name} must be a vocabulary ID")
         if self.semantic_anchor_classes is not None and (
             isinstance(self.semantic_anchor_classes, bool)
@@ -70,7 +80,7 @@ class NeuralToTextModelConfig:
             raise ValueError("semantic_anchor_classes must be None or an integer of at least two")
 
     @classmethod
-    def from_mapping(cls, values: Mapping[str, Any]) -> "NeuralToTextModelConfig":
+    def from_mapping(cls, values: Mapping[str, Any]) -> NeuralToTextModelConfig:
         """Accept only declared configuration fields; reject silent misspellings."""
         if not isinstance(values, Mapping):
             raise ValueError("model configuration must be a mapping")
@@ -115,7 +125,9 @@ def describe_model_architecture(model: NeuralToTextModel) -> dict[str, Any]:
 
 def architecture_fingerprint(model: NeuralToTextModel) -> str:
     """Stable SHA-256 fingerprint for architecture and state-dict compatibility."""
-    canonical = json.dumps(describe_model_architecture(model), sort_keys=True, separators=(",", ":"))
+    canonical = json.dumps(
+        describe_model_architecture(model), sort_keys=True, separators=(",", ":")
+    )
     return sha256(canonical.encode("utf-8")).hexdigest()
 
 

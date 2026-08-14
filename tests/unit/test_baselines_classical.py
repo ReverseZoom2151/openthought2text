@@ -1,6 +1,11 @@
 import pytest
 
-from openthought2text.baselines import ConstantTextBaseline, FrequencyTextBaseline, NearestNeighborTextRetrieval, RidgeRegressor
+from openthought2text.baselines import (
+    ConstantTextBaseline,
+    FrequencyTextBaseline,
+    NearestNeighborTextRetrieval,
+    RidgeRegressor,
+)
 from openthought2text.evaluation import assert_target_free_signature
 
 

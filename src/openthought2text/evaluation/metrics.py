@@ -7,13 +7,12 @@ misleading for the small and variable-length neural-language datasets we support
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
-from collections import Counter
 import math
 import re
 import unicodedata
-
+from collections import Counter
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 
 _WORD_RE = re.compile(r"[^\w']+", flags=re.UNICODE)
 
@@ -123,12 +122,18 @@ def corpus_bleu(
             hyp_counts = _ngrams(hyp_tokens, order)
             ref_counts = _ngrams(ref_tokens, order)
             totals[order - 1] += sum(hyp_counts.values())
-            matches[order - 1] += sum(min(count, ref_counts[gram]) for gram, count in hyp_counts.items())
+            matches[order - 1] += sum(
+                min(count, ref_counts[gram]) for gram, count in hyp_counts.items()
+            )
     active = [index for index, total in enumerate(totals) if total]
     if hypothesis_length == 0 or not active or any(matches[index] == 0 for index in active):
         return 0.0
     log_precision = sum(math.log(matches[index] / totals[index]) for index in active) / len(active)
-    brevity_penalty = 1.0 if hypothesis_length > reference_length else math.exp(1 - reference_length / hypothesis_length)
+    brevity_penalty = (
+        1.0
+        if hypothesis_length > reference_length
+        else math.exp(1 - reference_length / hypothesis_length)
+    )
     return brevity_penalty * math.exp(log_precision)
 
 
@@ -137,7 +142,10 @@ def corpus_rouge_l(
 ) -> float:
     """Macro-average token LCS F1 (ROUGE-L style), with paired-empty score one."""
     refs, hyps = _paired_texts(references, hypotheses)
-    scores = [_rouge_l_tokens(list(tokenizer(reference)), list(tokenizer(hypothesis))) for reference, hypothesis in zip(refs, hyps, strict=True)]
+    scores = [
+        _rouge_l_tokens(list(tokenizer(reference)), list(tokenizer(hypothesis)))
+        for reference, hypothesis in zip(refs, hyps, strict=True)
+    ]
     return sum(scores) / len(scores)
 
 
@@ -150,11 +158,16 @@ def corpus_meteor_unigram_approx(
     form. It deliberately omits stemming, synonym matching, and language resources.
     """
     refs, hyps = _paired_texts(references, hypotheses)
-    scores = [_meteor_unigram_tokens(list(tokenizer(reference)), list(tokenizer(hypothesis))) for reference, hypothesis in zip(refs, hyps, strict=True)]
+    scores = [
+        _meteor_unigram_tokens(list(tokenizer(reference)), list(tokenizer(hypothesis)))
+        for reference, hypothesis in zip(refs, hyps, strict=True)
+    ]
     return sum(scores) / len(scores)
 
 
-def _paired_texts(references: Iterable[str], hypotheses: Iterable[str]) -> tuple[list[str], list[str]]:
+def _paired_texts(
+    references: Iterable[str], hypotheses: Iterable[str]
+) -> tuple[list[str], list[str]]:
     refs, hyps = list(references), list(hypotheses)
     if not refs or len(refs) != len(hyps):
         raise ValueError("references and hypotheses must be non-empty and equally sized")
@@ -162,7 +175,9 @@ def _paired_texts(references: Iterable[str], hypotheses: Iterable[str]) -> tuple
 
 
 def _ngrams(tokens: Sequence[str], order: int) -> Counter[tuple[str, ...]]:
-    return Counter(tuple(tokens[index:index + order]) for index in range(max(0, len(tokens) - order + 1)))
+    return Counter(
+        tuple(tokens[index : index + order]) for index in range(max(0, len(tokens) - order + 1))
+    )
 
 
 def _rouge_l_tokens(reference: Sequence[str], hypothesis: Sequence[str]) -> float:
@@ -174,7 +189,11 @@ def _rouge_l_tokens(reference: Sequence[str], hypothesis: Sequence[str]) -> floa
     for reference_token in reference:
         current = [0]
         for index, hypothesis_token in enumerate(hypothesis, start=1):
-            current.append(previous[index - 1] + 1 if reference_token == hypothesis_token else max(previous[index], current[index - 1]))
+            current.append(
+                previous[index - 1] + 1
+                if reference_token == hypothesis_token
+                else max(previous[index], current[index - 1])
+            )
         previous = current
     lcs = previous[-1]
     precision, recall = lcs / len(hypothesis), lcs / len(reference)
@@ -189,7 +208,14 @@ def _meteor_unigram_tokens(reference: Sequence[str], hypothesis: Sequence[str]) 
     used_reference: set[int] = set()
     matches: list[tuple[int, int]] = []
     for hypothesis_index, token in enumerate(hypothesis):
-        match = next((index for index, reference_token in enumerate(reference) if index not in used_reference and reference_token == token), None)
+        match = next(
+            (
+                index
+                for index, reference_token in enumerate(reference)
+                if index not in used_reference and reference_token == token
+            ),
+            None,
+        )
         if match is not None:
             used_reference.add(match)
             matches.append((hypothesis_index, match))
@@ -198,7 +224,10 @@ def _meteor_unigram_tokens(reference: Sequence[str], hypothesis: Sequence[str]) 
         return 0.0
     precision, recall = count / len(hypothesis), count / len(reference)
     harmonic = 10 * precision * recall / (recall + 9 * precision)
-    chunks = 1 + sum(current[0] != previous[0] + 1 or current[1] != previous[1] + 1 for previous, current in zip(matches, matches[1:]))
+    chunks = 1 + sum(
+        current[0] != previous[0] + 1 or current[1] != previous[1] + 1
+        for previous, current in zip(matches, matches[1:])
+    )
     penalty = 0.5 * (chunks / count) ** 3
     return harmonic * (1 - penalty)
 

@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
+import json
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-import re
-from typing import Any, Mapping
+from typing import Any
 
 from .dataset_card import load_dataset_card
 from .release_bundle import ReleaseArtifactReference, audit_dataset_release_bundle
 from .schema import InformationAccess
 from .splits import SplitProtocol
-
 
 PREFLIGHT_PLAN_KIND = "openthought2text.authorized_dataset_preflight"
 PREFLIGHT_PLAN_VERSION = "1.0"
@@ -27,7 +27,9 @@ def _file_digest(path: Path) -> str:
 def _canonical_digest(value: Mapping[str, Any]) -> str:
     body = dict(value)
     body.pop("checksum", None)
-    return sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    return sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
 
 
 def _safe_artifact(root: Path, value: str | Path) -> ReleaseArtifactReference:
@@ -71,7 +73,9 @@ class AuthorizedDatasetPreflightPlan:
             raise ValueError(f"unsupported preflight plan version: {self.version!r}")
         if self.inference_access.inference_label_leakage:
             raise ValueError("preflight inference access cannot expose text labels or context")
-        if not self.requested_protocols or len(set(self.requested_protocols)) != len(self.requested_protocols):
+        if not self.requested_protocols or len(set(self.requested_protocols)) != len(
+            self.requested_protocols
+        ):
             raise ValueError("requested_protocols must be a non-empty unique list")
         if self.checksum is not None and _CHECKSUM.fullmatch(self.checksum) is None:
             raise ValueError("preflight plan checksum must be lowercase SHA-256 hex")
@@ -94,7 +98,7 @@ class AuthorizedDatasetPreflightPlan:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "AuthorizedDatasetPreflightPlan":
+    def from_dict(cls, data: Mapping[str, Any]) -> AuthorizedDatasetPreflightPlan:
         if data.get("kind") != PREFLIGHT_PLAN_KIND:
             raise ValueError("not an authorized dataset preflight plan")
         try:
@@ -106,7 +110,9 @@ class AuthorizedDatasetPreflightPlan:
                 release_bundle=ReleaseArtifactReference.from_dict(data["release_bundle"]),
                 split_plan=ReleaseArtifactReference.from_dict(data["split_plan"]),
                 inference_access=InformationAccess.from_dict(data["inference_access"]),
-                requested_protocols=tuple(SplitProtocol(item) for item in data["requested_protocols"]),
+                requested_protocols=tuple(
+                    SplitProtocol(item) for item in data["requested_protocols"]
+                ),
                 checksum=str(data["checksum"]),
                 version=str(data.get("version", PREFLIGHT_PLAN_VERSION)),
             )
@@ -183,7 +189,9 @@ def write_authorized_preflight_plan(path: str | Path, plan: AuthorizedDatasetPre
     if destination.suffix.casefold() != ".json":
         raise ValueError("preflight plans must be written as .json")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(plan.to_dict(), sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    destination.write_text(
+        json.dumps(plan.to_dict(), sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8"
+    )
 
 
 def audit_authorized_preflight_plan(path: str | Path) -> PreflightReport:
@@ -195,9 +203,15 @@ def audit_authorized_preflight_plan(path: str | Path) -> PreflightReport:
             raise ValueError("preflight plan must be a JSON object")
         plan = AuthorizedDatasetPreflightPlan.from_dict(raw)
     except (OSError, json.JSONDecodeError, ValueError) as error:
-        return PreflightReport(plan_path, issues=(PreflightIssue("INVALID_PREFLIGHT_PLAN", str(error), plan_path),))
+        return PreflightReport(
+            plan_path, issues=(PreflightIssue("INVALID_PREFLIGHT_PLAN", str(error), plan_path),)
+        )
     root = plan_path.parent
-    refs = {"dataset_card": plan.dataset_card, "release_bundle": plan.release_bundle, "split_plan": plan.split_plan}
+    refs = {
+        "dataset_card": plan.dataset_card,
+        "release_bundle": plan.release_bundle,
+        "split_plan": plan.split_plan,
+    }
     issues: list[PreflightIssue] = []
     paths: dict[str, Path] = {}
     for name, reference in refs.items():
@@ -216,12 +230,17 @@ def audit_authorized_preflight_plan(path: str | Path) -> PreflightReport:
         try:
             rebuilt = build_authorized_preflight_plan(
                 root,
-                dataset_card=paths["dataset_card"], release_bundle=paths["release_bundle"], split_plan=paths["split_plan"],
-                authorization_id=plan.authorization_id, source_root_identifier=plan.source_root_identifier,
+                dataset_card=paths["dataset_card"],
+                release_bundle=paths["release_bundle"],
+                split_plan=paths["split_plan"],
+                authorization_id=plan.authorization_id,
+                source_root_identifier=plan.source_root_identifier,
                 requested_protocols=tuple(plan.requested_protocols),
             )
             if rebuilt.inference_access != plan.inference_access:
-                issues.append(PreflightIssue("INFERENCE_ACCESS_MISMATCH", "plan differs from release bundle"))
+                issues.append(
+                    PreflightIssue("INFERENCE_ACCESS_MISMATCH", "plan differs from release bundle")
+                )
         except ValueError as error:
             issues.append(PreflightIssue("NOT_RELEASE_READY", str(error)))
     return PreflightReport(plan_path, plan, tuple(issues))

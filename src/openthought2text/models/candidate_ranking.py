@@ -46,7 +46,10 @@ class MaskedCandidateRankingLoss(nn.Module):
         ranking: CandidateRankingOutput,
         positive_candidate_positions: torch.Tensor,
     ) -> CandidateRankingTrainingOutput:
-        if positive_candidate_positions.ndim != 1 or positive_candidate_positions.shape[0] != ranking.scores.shape[0]:
+        if (
+            positive_candidate_positions.ndim != 1
+            or positive_candidate_positions.shape[0] != ranking.scores.shape[0]
+        ):
             raise ValueError("positive_candidate_positions must be [batch]")
         if positive_candidate_positions.dtype not in (
             torch.int8,
@@ -113,7 +116,13 @@ class EvidenceGroundedCandidateRanker(nn.Module):
             candidate_ids = candidate_ids.unsqueeze(0).expand(batch, -1)
         if candidate_ids.ndim != 2 or candidate_ids.shape[0] != batch:
             raise ValueError("candidate_ids must be [candidates] or [batch, candidates]")
-        if candidate_ids.dtype not in (torch.int8, torch.int16, torch.int32, torch.int64, torch.uint8):
+        if candidate_ids.dtype not in (
+            torch.int8,
+            torch.int16,
+            torch.int32,
+            torch.int64,
+            torch.uint8,
+        ):
             raise ValueError("candidate_ids must have an integer dtype")
         if candidate_ids.lt(0).any():
             raise ValueError("candidate_ids must be nonnegative authorized IDs")
@@ -121,9 +130,13 @@ class EvidenceGroundedCandidateRanker(nn.Module):
         if candidate_embeddings.ndim == 2:
             candidate_embeddings = candidate_embeddings.unsqueeze(0).expand(batch, -1, -1)
         if candidate_embeddings.shape != (batch, candidates, embedding_dim):
-            raise ValueError("candidate_embeddings must be [candidates, dim] or [batch, candidates, dim]")
+            raise ValueError(
+                "candidate_embeddings must be [candidates, dim] or [batch, candidates, dim]"
+            )
         if candidate_mask is None:
-            candidate_mask = torch.ones(batch, candidates, dtype=torch.bool, device=candidate_ids.device)
+            candidate_mask = torch.ones(
+                batch, candidates, dtype=torch.bool, device=candidate_ids.device
+            )
         elif candidate_mask.ndim == 1:
             candidate_mask = candidate_mask.unsqueeze(0).expand(batch, -1)
         if candidate_mask.shape != (batch, candidates):
@@ -151,7 +164,9 @@ class EvidenceGroundedCandidateRanker(nn.Module):
             embedding_dim=self.candidate_embedding_dim,
         )
         evidence = self.evidence_projection(pooled.pooled)
-        scores = F.normalize(evidence, dim=-1).unsqueeze(1) @ F.normalize(embeddings, dim=-1).transpose(1, 2)
+        scores = F.normalize(evidence, dim=-1).unsqueeze(1) @ F.normalize(
+            embeddings, dim=-1
+        ).transpose(1, 2)
         scores = scores.squeeze(1) / self.temperature
         scores = scores.masked_fill(~mask, -torch.inf)
         return CandidateRankingOutput(

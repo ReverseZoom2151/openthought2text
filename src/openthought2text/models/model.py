@@ -60,7 +60,10 @@ class NeuralToTextModel(nn.Module):
         super().__init__()
         if encoder.hidden_size != decoder.hidden_size:
             raise ValueError("encoder and decoder hidden sizes must match")
-        if semantic_anchor_head is not None and semantic_anchor_head.hidden_size != encoder.hidden_size:
+        if (
+            semantic_anchor_head is not None
+            and semantic_anchor_head.hidden_size != encoder.hidden_size
+        ):
             raise ValueError("semantic anchor head hidden size must match encoder")
         self.encoder = encoder
         self.decoder = decoder
@@ -121,9 +124,13 @@ class NeuralToTextModel(nn.Module):
         decoded = self.decoder(encoded.features, encoded.mask, target_ids, labels)
         anchors = None
         if self.semantic_anchor_head is not None:
-            anchors = self.semantic_anchor_head(encoded.features, anchor_targets, anchor_position_mask)
+            anchors = self.semantic_anchor_head(
+                encoded.features, anchor_targets, anchor_position_mask
+            )
         elif anchor_targets is not None or anchor_position_mask is not None:
-            raise ValueError("anchor targets were supplied but no semantic_anchor_head is configured")
+            raise ValueError(
+                "anchor targets were supplied but no semantic_anchor_head is configured"
+            )
         return NeuralToTextTrainingOutput(encoder=encoded, decoder=decoded, anchors=anchors)
 
     @torch.no_grad()

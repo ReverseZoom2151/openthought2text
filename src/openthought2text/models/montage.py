@@ -35,7 +35,9 @@ class GraphMontageAdapter(nn.Module):
         if coordinates.ndim == 2:
             coordinates = coordinates.unsqueeze(0).expand(batch, -1, -1)
         if coordinates.shape != (batch, channels, self.coordinate_size):
-            raise ValueError("coordinates must be [channels, coordinate_size] or [batch, channels, coordinate_size]")
+            raise ValueError(
+                "coordinates must be [channels, coordinate_size] or [batch, channels, coordinate_size]"
+            )
         return coordinates
 
     def graph_weights(self, channel_mask: torch.Tensor, coordinates: torch.Tensor) -> torch.Tensor:
@@ -71,7 +73,9 @@ class GraphMontageAdapter(nn.Module):
         if channel_mask.shape != (batch, channels):
             raise ValueError("channel_mask must be [batch, channels]")
         weights = self.graph_weights(channel_mask, coordinates)
-        valid_features = channel_features * channel_mask[:, :, None, None].to(channel_features.dtype)
+        valid_features = channel_features * channel_mask[:, :, None, None].to(
+            channel_features.dtype
+        )
         neighbor_mean = torch.einsum("bij,bjth->bith", weights, valid_features)
         output = self.norm(self.residual(valid_features) + self.message(neighbor_mean))
         return output * channel_mask[:, :, None, None].to(output.dtype)

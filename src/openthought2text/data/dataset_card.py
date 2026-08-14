@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-import re
-from typing import Any, Mapping
-
+from typing import Any
 
 DATASET_CARD_KIND = "openthought2text.dataset_card"
 DATASET_CARD_VERSION = "1.0"
@@ -30,7 +30,9 @@ def _string_mapping(value: object, name: str, required_key: str) -> Mapping[str,
     if not isinstance(value, Mapping) or not value:
         raise ValueError(f"{name} must be a non-empty object")
     result = {str(key): item for key, item in value.items()}
-    if any(not key or not isinstance(item, str) or not item.strip() for key, item in result.items()):
+    if any(
+        not key or not isinstance(item, str) or not item.strip() for key, item in result.items()
+    ):
         raise ValueError(f"{name} values must be non-empty strings")
     if required_key not in result:
         raise ValueError(f"{name} must disclose {required_key!r}")
@@ -59,7 +61,9 @@ class DatasetCard:
         _nonempty_string(self.access, "access")
         if self.version != DATASET_CARD_VERSION:
             raise ValueError(f"unsupported dataset card version: {self.version!r}")
-        if not self.modality or any(not isinstance(item, str) or not item.strip() for item in self.modality):
+        if not self.modality or any(
+            not isinstance(item, str) or not item.strip() for item in self.modality
+        ):
             raise ValueError("modality must be a non-empty list of strings")
         if len(set(self.modality)) != len(self.modality):
             raise ValueError("modality entries must be unique")
@@ -88,7 +92,7 @@ class DatasetCard:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "DatasetCard":
+    def from_dict(cls, data: Mapping[str, Any]) -> DatasetCard:
         if data.get("kind") != DATASET_CARD_KIND:
             raise ValueError("not an OpenThought2Text dataset card")
         try:
@@ -100,7 +104,9 @@ class DatasetCard:
                 access=_nonempty_string(data["access"], "access"),
                 modality=tuple(data["modality"]),
                 splits=_string_mapping(data["splits"], "splits", "protocol"),
-                preprocessing=_string_mapping(data["preprocessing"], "preprocessing", "description"),
+                preprocessing=_string_mapping(
+                    data["preprocessing"], "preprocessing", "description"
+                ),
                 version=str(data.get("version", DATASET_CARD_VERSION)),
             )
         except (KeyError, TypeError, ValueError) as error:

@@ -20,7 +20,10 @@ class ContinuousChunks:
             raise ValueError("values must have shape [chunks, channels, samples]")
         if self.start_samples.ndim != 1 or self.end_samples.ndim != 1:
             raise ValueError("chunk boundaries must be one-dimensional")
-        if len(self.start_samples) != self.values.shape[0] or len(self.end_samples) != self.values.shape[0]:
+        if (
+            len(self.start_samples) != self.values.shape[0]
+            or len(self.end_samples) != self.values.shape[0]
+        ):
             raise ValueError("one start/end boundary is required per chunk")
         if not torch.all(self.end_samples > self.start_samples):
             raise ValueError("every chunk end must be greater than its start")

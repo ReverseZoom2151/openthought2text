@@ -51,7 +51,10 @@ class ResidualVectorQuantizer(nn.Module):
         super().__init__()
         self.config = config
         self.codebooks = nn.ModuleList(
-            [nn.Embedding(config.codebook_size, config.embedding_dim) for _ in range(config.num_codebooks)]
+            [
+                nn.Embedding(config.codebook_size, config.embedding_dim)
+                for _ in range(config.num_codebooks)
+            ]
         )
         for codebook in self.codebooks:
             nn.init.uniform_(codebook.weight, -1 / config.codebook_size, 1 / config.codebook_size)
@@ -92,7 +95,10 @@ class ResidualVectorQuantizer(nn.Module):
         if indices.lt(0).any() or indices.ge(self.config.codebook_size).any():
             raise ValueError("indices contain a code outside the codebook")
         reconstruction = torch.zeros(
-            *indices.shape[:2], self.config.embedding_dim, dtype=self.codebooks[0].weight.dtype, device=indices.device
+            *indices.shape[:2],
+            self.config.embedding_dim,
+            dtype=self.codebooks[0].weight.dtype,
+            device=indices.device,
         )
         for level, codebook in enumerate(self.codebooks):
             reconstruction = reconstruction + codebook(indices[..., level])
@@ -100,10 +106,14 @@ class ResidualVectorQuantizer(nn.Module):
             reconstruction = reconstruction * mask.unsqueeze(-1).to(reconstruction.dtype)
         return reconstruction
 
-    def forward(self, embeddings: torch.Tensor, mask: torch.Tensor | None = None) -> ResidualVectorQuantizerOutput:
+    def forward(
+        self, embeddings: torch.Tensor, mask: torch.Tensor | None = None
+    ) -> ResidualVectorQuantizerOutput:
         self._validate_embeddings(embeddings, mask)
         if mask is None:
-            weights = torch.ones(embeddings.shape[:2], dtype=embeddings.dtype, device=embeddings.device)
+            weights = torch.ones(
+                embeddings.shape[:2], dtype=embeddings.dtype, device=embeddings.device
+            )
         else:
             weights = mask.to(dtype=embeddings.dtype)
         denominator = weights.sum().clamp_min(1)
@@ -116,10 +126,16 @@ class ResidualVectorQuantizer(nn.Module):
         for codebook in self.codebooks:
             indices = self._nearest(residual, codebook)
             selected = codebook(indices)
-            commitment = commitment + (
-                (residual - selected.detach()).square().mean(dim=-1) * weights
-            ).sum() / denominator
-            codebook_loss = codebook_loss + ((residual.detach() - selected).square().mean(dim=-1) * weights).sum() / denominator
+            commitment = (
+                commitment
+                + ((residual - selected.detach()).square().mean(dim=-1) * weights).sum()
+                / denominator
+            )
+            codebook_loss = (
+                codebook_loss
+                + ((residual.detach() - selected).square().mean(dim=-1) * weights).sum()
+                / denominator
+            )
             reconstruction = reconstruction + selected
             # Detaching selected keeps codebook gradients confined to the
             # explicit codebook term rather than later residual decisions.

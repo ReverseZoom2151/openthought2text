@@ -26,14 +26,21 @@ def _hash(character: str) -> str:
 def _artifacts():
     bind = lambda name, char: ArtifactBinding(name, f"artifacts/{name}", _hash(char))
     provenance = RunArtifactProvenance(
-        "run-1", bind("model", "a"), bind("checkpoint", "b"), bind("manifest", "c"),
-        bind("split", "d"), bind("config", "e"), "abc", InformationAccessContract(
-            True, True, False, False, False, False, False, "LOSO", "fixed"
-        ),
+        "run-1",
+        bind("model", "a"),
+        bind("checkpoint", "b"),
+        bind("manifest", "c"),
+        bind("split", "d"),
+        bind("config", "e"),
+        "abc",
+        InformationAccessContract(True, True, False, False, False, False, False, "LOSO", "fixed"),
     )
     evaluation = EvaluationReport(
-        "run-1", BenchmarkRowLabel("zuco", "eeg", "read", "trial", "loso", "open", "greedy"),
-        {"wer": 0.2}, 2, "predictions.jsonl",
+        "run-1",
+        BenchmarkRowLabel("zuco", "eeg", "read", "trial", "loso", "open", "greedy"),
+        {"wer": 0.2},
+        2,
+        "predictions.jsonl",
         tuple(ControlResult(condition, {"wer": 0.5}, 2) for condition in ControlCondition),
         {"wer": GroundingReport(0.2, "noise", 0.5, 0.3, 0.3, False)},
     )
@@ -52,7 +59,9 @@ def test_markdown_reference_validator_accepts_generated_card() -> None:
     )
     card = generate_model_card(evaluation, provenance, gate, artifact_references=_references())
     result = validate_model_card_references(
-        card.markdown, compute_model_card_reference_bindings(evaluation, provenance, gate), gate_passed=True
+        card.markdown,
+        compute_model_card_reference_bindings(evaluation, provenance, gate),
+        gate_passed=True,
     )
     assert result.valid
 
@@ -65,15 +74,21 @@ def test_validator_rejects_missing_or_tampered_digest() -> None:
     card = generate_model_card(evaluation, provenance, gate, artifact_references=_references())
     tampered = card.markdown.replace("| Evaluation binding |", "| Missing binding |")
     result = validate_model_card_references(
-        tampered, compute_model_card_reference_bindings(evaluation, provenance, gate), gate_passed=True
+        tampered,
+        compute_model_card_reference_bindings(evaluation, provenance, gate),
+        gate_passed=True,
     )
-    assert ModelCardReferenceFailureCode.MISSING_BINDING in [failure.code for failure in result.failures]
+    assert ModelCardReferenceFailureCode.MISSING_BINDING in [
+        failure.code for failure in result.failures
+    ]
 
 
 def test_validator_rejects_claimed_status_when_gate_failed() -> None:
     evaluation, provenance, _ = _artifacts()
     failed_gate = assess_release_evidence(evaluation, provenance, generation_audit=None)
-    card = generate_model_card(evaluation, provenance, failed_gate, artifact_references=_references())
+    card = generate_model_card(
+        evaluation, provenance, failed_gate, artifact_references=_references()
+    )
     invalid = card.markdown.replace("**UNSUPPORTED", "**CLAIMED")
     result = validate_model_card_references(
         invalid,

@@ -1,7 +1,9 @@
-from openthought2text.data import DatasetManifest, InformationAccess, load_manifest, write_manifest
-from .test_data_schema import sample
-from openthought2text.data.schema import SchemaError
 import pytest
+
+from openthought2text.data import DatasetManifest, InformationAccess, load_manifest, write_manifest
+from openthought2text.data.schema import SchemaError
+
+from .test_data_schema import sample
 
 
 def test_jsonl_manifest_round_trip(tmp_path):

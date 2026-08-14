@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 from openthought2text.data import (
     SplitPlan,
     SplitProtocol,
@@ -90,8 +88,7 @@ def test_validator_rejects_forbidden_unique_text_overlap() -> None:
         protocol=SplitProtocol.UNIQUE_TEXT,
         seed=0,
         assignments=tuple(
-            (row.sample_id, "train" if row.sample_id == "s-0" else "test")
-            for row in source
+            (row.sample_id, "train" if row.sample_id == "s-0" else "test") for row in source
         ),
     )
     report = validate_split_plan(source, plan)

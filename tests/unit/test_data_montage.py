@@ -1,21 +1,32 @@
 from __future__ import annotations
 
 from dataclasses import replace
+
 import pytest
 import torch
 
-from openthought2text.data import NamedMontage, SignalReference, TensorBackedSample, select_named_montage
+from openthought2text.data import (
+    NamedMontage,
+    SignalReference,
+    TensorBackedSample,
+    select_named_montage,
+)
 
 from .test_data_schema import sample
 
 
 def row():
     base = sample()
-    base = replace(base, signal=SignalReference(
-        uri=base.signal.uri, recording_id=base.signal.recording_id,
-        sampling_rate_hz=base.signal.sampling_rate_hz, channel_count=3,
-        channel_names=("Fz", "Cz", "Pz"),
-    ))
+    base = replace(
+        base,
+        signal=SignalReference(
+            uri=base.signal.uri,
+            recording_id=base.signal.recording_id,
+            sampling_rate_hz=base.signal.sampling_rate_hz,
+            channel_count=3,
+            channel_names=("Fz", "Cz", "Pz"),
+        ),
+    )
     return TensorBackedSample(
         sample=base,
         values=torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]),

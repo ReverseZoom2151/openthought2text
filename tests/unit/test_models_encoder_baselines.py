@@ -1,14 +1,20 @@
 import pytest
 import torch
 
-from openthought2text.models import ChannelNetNeuralEncoder, CompactConformerNeuralEncoder, GRUNeuralEncoder
+from openthought2text.models import (
+    ChannelNetNeuralEncoder,
+    CompactConformerNeuralEncoder,
+    GRUNeuralEncoder,
+)
 
 
 def _encoders():
     return [
         ChannelNetNeuralEncoder(hidden_size=8, temporal_kernel=5, stride_samples=4),
         GRUNeuralEncoder(hidden_size=8, temporal_kernel=5, stride_samples=4),
-        CompactConformerNeuralEncoder(hidden_size=8, temporal_kernel=5, stride_samples=4, num_layers=1, num_heads=2, dropout=0),
+        CompactConformerNeuralEncoder(
+            hidden_size=8, temporal_kernel=5, stride_samples=4, num_layers=1, num_heads=2, dropout=0
+        ),
     ]
 
 
@@ -38,11 +44,18 @@ def test_encoder_baselines_ignore_appended_masked_channels_and_coordinates(encod
     expected = encoder(signals, coordinates=coordinates).features
     padded_signals = torch.cat([signals, torch.randn(1, 2, 16) * 1_000], dim=1)
     padded_coordinates = torch.cat([coordinates, torch.randn(1, 2, 3) * 1_000], dim=1)
-    actual = encoder(padded_signals, channel_mask=torch.tensor([[True, True, False, False]]), coordinates=padded_coordinates).features
+    actual = encoder(
+        padded_signals,
+        channel_mask=torch.tensor([[True, True, False, False]]),
+        coordinates=padded_coordinates,
+    ).features
     torch.testing.assert_close(actual, expected, rtol=2e-6, atol=2e-6)
 
 
 def test_gru_baseline_rejects_holey_masks_that_cannot_be_packed_safely():
     encoder = GRUNeuralEncoder(hidden_size=4, temporal_kernel=3, stride_samples=2)
     with pytest.raises(ValueError, match="prefix-valid"):
-        encoder(torch.randn(1, 2, 8), sample_mask=torch.tensor([[True, True, False, False, True, True, True, True]]))
+        encoder(
+            torch.randn(1, 2, 8),
+            sample_mask=torch.tensor([[True, True, False, False, True, True, True, True]]),
+        )

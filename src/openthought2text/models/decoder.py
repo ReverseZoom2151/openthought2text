@@ -95,7 +95,9 @@ class TargetFreeAutoregressiveDecoder(nn.Module):
         if not neural_mask.bool().any(dim=1).all():
             raise ValueError("each example needs at least one valid neural token")
 
-    def _decode(self, input_ids: torch.Tensor, neural_features: torch.Tensor, neural_mask: torch.Tensor) -> torch.Tensor:
+    def _decode(
+        self, input_ids: torch.Tensor, neural_features: torch.Tensor, neural_mask: torch.Tensor
+    ) -> torch.Tensor:
         batch, length = input_ids.shape
         if length > self.max_sequence_length:
             raise ValueError("sequence exceeds max_sequence_length")
@@ -142,7 +144,9 @@ class TargetFreeAutoregressiveDecoder(nn.Module):
             decoder_inputs[:, 1:] = safe_targets[:, :-1]
         logits = self._decode(decoder_inputs, neural_features, neural_mask)
         effective_labels = target_ids if labels is None else labels
-        loss = F.cross_entropy(logits.reshape(-1, self.vocab_size), effective_labels.reshape(-1), ignore_index=-100)
+        loss = F.cross_entropy(
+            logits.reshape(-1, self.vocab_size), effective_labels.reshape(-1), ignore_index=-100
+        )
         return DecoderTrainingOutput(logits=logits, loss=loss)
 
     @torch.no_grad()
@@ -163,13 +167,19 @@ class TargetFreeAutoregressiveDecoder(nn.Module):
         )
         finished = torch.zeros(batch, dtype=torch.bool, device=neural_features.device)
         for _ in range(config.max_new_tokens):
-            logits = self._decode(generated, neural_features, neural_mask)[:, -1] / config.temperature
+            logits = (
+                self._decode(generated, neural_features, neural_mask)[:, -1] / config.temperature
+            )
             if config.do_sample:
-                next_token = torch.multinomial(torch.softmax(logits, dim=-1), num_samples=1).squeeze(1)
+                next_token = torch.multinomial(
+                    torch.softmax(logits, dim=-1), num_samples=1
+                ).squeeze(1)
             else:
                 next_token = logits.argmax(dim=-1)
             if config.eos_token_id is not None:
-                next_token = torch.where(finished, torch.full_like(next_token, self.pad_token_id), next_token)
+                next_token = torch.where(
+                    finished, torch.full_like(next_token, self.pad_token_id), next_token
+                )
                 finished |= next_token.eq(config.eos_token_id)
             generated = torch.cat([generated, next_token.unsqueeze(1)], dim=1)
             if config.eos_token_id is not None and finished.all():

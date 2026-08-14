@@ -12,12 +12,16 @@ def test_domain_adversary_masks_padding_exposes_train_only_labels_and_backpropag
     adversary = CrossSubjectDomainAdversary(hidden_size=4, num_subjects=3)
     features = torch.randn(2, 4, 4, requires_grad=True)
     mask = torch.tensor([[True, True, False, False], [True, False, True, False]])
-    output = adversary.training_loss(features, mask, torch.tensor([0, 2]), gradient_reversal_scale=0.5)
+    output = adversary.training_loss(
+        features, mask, torch.tensor([0, 2]), gradient_reversal_scale=0.5
+    )
     assert output.logits.shape == (2, 3)
     assert output.pooled_features.shape == (2, 4)
     assert output.valid_token_counts.tolist() == [2, 2]
     assert set(inspect.signature(adversary.forward).parameters) == {
-        "neural_features", "token_mask", "gradient_reversal_scale"
+        "neural_features",
+        "token_mask",
+        "gradient_reversal_scale",
     }
     output.loss.backward()
     assert features.grad is not None and features.grad.abs().sum() > 0

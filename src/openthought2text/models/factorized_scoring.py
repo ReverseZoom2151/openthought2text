@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 
 import torch
 from torch import nn
@@ -76,7 +76,9 @@ def fit_factorized_score_weights(
         ).to(dtype=torch.float64)
         targets = validation_utilities.to(dtype=torch.float64)
         identity = torch.eye(3, dtype=torch.float64, device=design.device)
-        weights = torch.linalg.solve(design.T @ design + ridge_regularization * identity, design.T @ targets)
+        weights = torch.linalg.solve(
+            design.T @ design + ridge_regularization * identity, design.T @ targets
+        )
     return ValidationFittedScoreWeights(
         lambda_neural=float(weights[0].item()),
         lambda_lm=float(weights[1].item()),
@@ -100,7 +102,9 @@ class FactorizedScoringControl:
             "lambda_lm": self.lambda_lm,
             "lambda_length": self.lambda_length,
         }.items():
-            if value is not None and (not isinstance(value, (int, float)) or not math.isfinite(value)):
+            if value is not None and (
+                not isinstance(value, (int, float)) or not math.isfinite(value)
+            ):
                 raise ValueError(f"{name} override must be finite or None")
 
 
@@ -141,10 +145,17 @@ class EvidenceFactorizedCandidateScorer(nn.Module):
     @property
     def effective_weights(self) -> tuple[float, float, float]:
         return (
-            self.fitted_weights.lambda_neural if self.control.lambda_neural is None else self.control.lambda_neural,
-            self.fitted_weights.lambda_lm if self.control.lambda_lm is None else self.control.lambda_lm,
-            self.fitted_weights.lambda_length if self.control.lambda_length is None else self.control.lambda_length,
+            self.fitted_weights.lambda_neural
+            if self.control.lambda_neural is None
+            else self.control.lambda_neural,
+            self.fitted_weights.lambda_lm
+            if self.control.lambda_lm is None
+            else self.control.lambda_lm,
+            self.fitted_weights.lambda_length
+            if self.control.lambda_length is None
+            else self.control.lambda_length,
         )
+
     def forward(
         self,
         neural_scores: torch.Tensor,
@@ -153,22 +164,37 @@ class EvidenceFactorizedCandidateScorer(nn.Module):
         candidate_ids: torch.Tensor,
         candidate_mask: torch.Tensor | None = None,
     ) -> FactorizedCandidateScoringOutput:
-        if neural_scores.ndim != 2 or lm_scores.shape != neural_scores.shape or length_scores.shape != neural_scores.shape:
-            raise ValueError("neural_scores, lm_scores, and length_scores must be matching [batch, candidates] tensors")
-        if not all(torch.is_floating_point(value) and torch.isfinite(value).all() for value in (neural_scores, lm_scores, length_scores)):
+        if (
+            neural_scores.ndim != 2
+            or lm_scores.shape != neural_scores.shape
+            or length_scores.shape != neural_scores.shape
+        ):
+            raise ValueError(
+                "neural_scores, lm_scores, and length_scores must be matching [batch, candidates] tensors"
+            )
+        if not all(
+            torch.is_floating_point(value) and torch.isfinite(value).all()
+            for value in (neural_scores, lm_scores, length_scores)
+        ):
             raise ValueError("all factorized scores must be finite floating-point tensors")
         batch, candidates = neural_scores.shape
         if candidate_ids.ndim == 1:
             candidate_ids = candidate_ids.unsqueeze(0).expand(batch, -1)
         if candidate_ids.shape != (batch, candidates) or candidate_ids.dtype not in (
-            torch.int8, torch.int16, torch.int32, torch.int64, torch.uint8
+            torch.int8,
+            torch.int16,
+            torch.int32,
+            torch.int64,
+            torch.uint8,
         ):
             raise ValueError("candidate_ids must be integer [candidates] or [batch, candidates]")
         if candidate_ids.lt(0).any():
             raise ValueError("candidate_ids must be nonnegative")
         candidate_ids = candidate_ids.to(neural_scores.device)
         if candidate_mask is None:
-            candidate_mask = torch.ones(batch, candidates, dtype=torch.bool, device=neural_scores.device)
+            candidate_mask = torch.ones(
+                batch, candidates, dtype=torch.bool, device=neural_scores.device
+            )
         elif candidate_mask.ndim == 1:
             candidate_mask = candidate_mask.unsqueeze(0).expand(batch, -1)
         if candidate_mask.shape != (batch, candidates):
@@ -177,7 +203,9 @@ class EvidenceFactorizedCandidateScorer(nn.Module):
         if not candidate_mask.any(dim=1).all():
             raise ValueError("each row needs at least one authorized candidate")
         neural_weight, lm_weight, length_weight = self.effective_weights
-        combined = neural_weight * neural_scores + lm_weight * lm_scores + length_weight * length_scores
+        combined = (
+            neural_weight * neural_scores + lm_weight * lm_scores + length_weight * length_scores
+        )
         combined = combined.masked_fill(~candidate_mask, -torch.inf)
         return FactorizedCandidateScoringOutput(
             neural_scores=neural_scores,

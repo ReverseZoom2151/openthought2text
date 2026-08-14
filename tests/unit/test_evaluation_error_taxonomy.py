@@ -29,9 +29,7 @@ def test_word_operations_and_hallucination_precedence_are_exposed() -> None:
 
 
 def test_report_has_per_sample_records_and_zero_filled_aggregate_counts() -> None:
-    report = classify_text_errors(
-        ["a", "b", "c"], ["a", "", "x"], sample_ids=["s1", "s2", "s3"]
-    )
+    report = classify_text_errors(["a", "b", "c"], ["a", "", "x"], sample_ids=["s1", "s2", "s3"])
     assert [record.sample_id for record in report.records] == ["s1", "s2", "s3"]
     assert [record.category for record in report.records] == [
         TextErrorCategory.EXACT,

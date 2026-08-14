@@ -8,11 +8,11 @@ control predictions.
 
 from __future__ import annotations
 
+import math
+import random
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import product
-import math
-import random
 
 
 @dataclass(frozen=True, slots=True)

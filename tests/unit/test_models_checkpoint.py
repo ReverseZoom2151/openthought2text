@@ -57,4 +57,6 @@ def test_checkpoint_validator_rejects_malformed_or_self_inconsistent_metadata_wi
     metadata["architecture_fingerprint"] = "not-the-description-fingerprint"
     inconsistent = validate_checkpoint_architecture(model, metadata)
     assert not inconsistent.compatible
-    assert "checkpoint fingerprint does not match its architecture_description" in inconsistent.errors
+    assert (
+        "checkpoint fingerprint does not match its architecture_description" in inconsistent.errors
+    )

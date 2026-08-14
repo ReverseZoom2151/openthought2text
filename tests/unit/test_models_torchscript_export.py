@@ -3,8 +3,8 @@ import json
 import torch
 
 from openthought2text.models import (
-    NeuralToTextModelConfig,
     TORCHSCRIPT_SCOPE_NEURAL_ENCODER_EVIDENCE,
+    NeuralToTextModelConfig,
     build_neural_to_text_model,
     export_neural_encoder_evidence_torchscript,
     validate_neural_encoder_evidence_torchscript,
@@ -51,7 +51,9 @@ def test_neural_encoder_torchscript_validation_traces_target_free_evidence_scope
         "channel_mask": {"shape": [1, 2], "dtype": "torch.bool"},
         "coordinates": {"shape": [1, 2, 3], "dtype": "torch.float32"},
     }
-    eager = model.encoder(inputs[0], sample_mask=inputs[1], channel_mask=inputs[2], coordinates=inputs[3])
+    eager = model.encoder(
+        inputs[0], sample_mask=inputs[1], channel_mask=inputs[2], coordinates=inputs[3]
+    )
     scripted = validation.scripted_module(*inputs)
     torch.testing.assert_close(scripted[0], eager.features, rtol=1e-4, atol=1e-5)
     assert torch.equal(scripted[1], eager.mask)
@@ -59,11 +61,14 @@ def test_neural_encoder_torchscript_validation_traces_target_free_evidence_scope
 
 def test_neural_encoder_torchscript_export_writes_scoped_architecture_sidecar(tmp_path):
     path = tmp_path / "neural_encoder_evidence.pt"
-    validation = export_neural_encoder_evidence_torchscript(_model(), *_inputs(), artifact_path=path)
+    validation = export_neural_encoder_evidence_torchscript(
+        _model(), *_inputs(), artifact_path=path
+    )
     assert validation.exportable and path.exists()
     sidecar = json.loads((tmp_path / "neural_encoder_evidence.pt.metadata.json").read_text())
     assert sidecar["torchscript_scope"] == TORCHSCRIPT_SCOPE_NEURAL_ENCODER_EVIDENCE
-    assert sidecar["architecture_metadata"]["architecture_fingerprint"] == validation.architecture_metadata[
-        "architecture_fingerprint"
-    ]
+    assert (
+        sidecar["architecture_metadata"]["architecture_fingerprint"]
+        == validation.architecture_metadata["architecture_fingerprint"]
+    )
     assert sidecar["input_signature"]["signals"]["shape"] == [1, 2, 12]

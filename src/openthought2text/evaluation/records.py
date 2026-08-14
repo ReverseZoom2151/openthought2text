@@ -8,19 +8,17 @@ rewriting a run-level summary.
 
 from __future__ import annotations
 
+import json
+import math
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from enum import Enum
-import json
-import math
 from pathlib import Path
 from typing import Any
 
 from openthought2text.controls import ControlCondition
 
 from .grounding import GroundingReport
-
 
 PREDICTION_RECORD_VERSION = "1.0"
 EVALUATION_REPORT_VERSION = "1.0"
@@ -74,11 +72,11 @@ class BenchmarkRowLabel:
         return {name: getattr(self, name) for name in self.__dataclass_fields__}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "BenchmarkRowLabel":
+    def from_dict(cls, data: Mapping[str, Any]) -> BenchmarkRowLabel:
         return cls(**{name: str(data[name]) for name in cls.__dataclass_fields__})
 
     @classmethod
-    def parse(cls, value: str) -> "BenchmarkRowLabel":
+    def parse(cls, value: str) -> BenchmarkRowLabel:
         parts = value.split("/")
         names = tuple(cls.__dataclass_fields__)
         if len(parts) != len(names):
@@ -132,7 +130,7 @@ class PredictionRecord:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "PredictionRecord":
+    def from_dict(cls, data: Mapping[str, Any]) -> PredictionRecord:
         return cls(
             sample_id=str(data["sample_id"]),
             prediction_text=str(data["prediction_text"]),
@@ -172,7 +170,7 @@ class ControlResult:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "ControlResult":
+    def from_dict(cls, data: Mapping[str, Any]) -> ControlResult:
         return cls(
             condition=ControlCondition(data["condition"]),
             scores=data["scores"],
@@ -213,7 +211,9 @@ def aggregate_control_results(results: Iterable[ControlResult]) -> tuple[Control
             for metric in metrics
         }
         aggregates.append(
-            ControlAggregate(condition=condition, runs=len(rows), examples=examples, mean_scores=means)
+            ControlAggregate(
+                condition=condition, runs=len(rows), examples=examples, mean_scores=means
+            )
         )
     return tuple(aggregates)
 
@@ -276,14 +276,16 @@ class EvaluationReport:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "EvaluationReport":
+    def from_dict(cls, data: Mapping[str, Any]) -> EvaluationReport:
         return cls(
             run_id=str(data["run_id"]),
             benchmark=BenchmarkRowLabel.from_dict(data["benchmark"]),
             metrics=data["metrics"],
             prediction_count=int(data["prediction_count"]),
             prediction_artifact=str(data["prediction_artifact"]),
-            control_results=tuple(ControlResult.from_dict(item) for item in data.get("control_results", ())),
+            control_results=tuple(
+                ControlResult.from_dict(item) for item in data.get("control_results", ())
+            ),
             grounding={
                 str(metric): GroundingReport(**values)
                 for metric, values in data.get("grounding", {}).items()

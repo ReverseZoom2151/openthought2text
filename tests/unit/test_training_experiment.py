@@ -19,9 +19,17 @@ def _row(sample_id: str, text: str, split: str = "train") -> TensorBackedSample:
 def _model(vocabulary_size: int):
     return build_neural_to_text_model(
         NeuralToTextModelConfig(
-            hidden_size=16, temporal_kernel=3, stride_samples=2, encoder_layers=1,
-            decoder_layers=1, encoder_heads=4, decoder_heads=4, vocabulary_size=vocabulary_size,
-            max_sequence_length=16, encoder_dropout=0.0, decoder_dropout=0.0,
+            hidden_size=16,
+            temporal_kernel=3,
+            stride_samples=2,
+            encoder_layers=1,
+            decoder_layers=1,
+            encoder_heads=4,
+            decoder_heads=4,
+            vocabulary_size=vocabulary_size,
+            max_sequence_length=16,
+            encoder_dropout=0.0,
+            decoder_dropout=0.0,
         )
     )
 
@@ -30,7 +38,11 @@ def test_training_inputs_and_one_epoch_are_train_only() -> None:
     inputs = build_training_inputs((_row("a", "alpha beta"), _row("b", "beta gamma")))
     model = _model(len(inputs.tokenizer.vocabulary))
     results = train_one_epoch(
-        model, inputs.rows, inputs.tokenizer, optimizer=torch.optim.AdamW(model.parameters()), batch_size=1
+        model,
+        inputs.rows,
+        inputs.tokenizer,
+        optimizer=torch.optim.AdamW(model.parameters()),
+        batch_size=1,
     )
     assert len(results) == 2
     assert all(result.loss > 0 for result in results)

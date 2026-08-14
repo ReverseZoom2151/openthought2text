@@ -7,14 +7,15 @@ from typing import Literal
 import torch
 from torch import nn
 
-
 SubjectAdapterMode = Literal["identity", "additive", "film"]
 
 
 class SubjectAdapter(nn.Module):
     """Apply an identity, additive embedding, or FiLM subject adaptation."""
 
-    def __init__(self, hidden_size: int, num_subjects: int, mode: SubjectAdapterMode = "identity") -> None:
+    def __init__(
+        self, hidden_size: int, num_subjects: int, mode: SubjectAdapterMode = "identity"
+    ) -> None:
         super().__init__()
         if mode not in {"identity", "additive", "film"}:
             raise ValueError("mode must be identity, additive, or film")
@@ -33,7 +34,9 @@ class SubjectAdapter(nn.Module):
                 self.embedding.weight.zero_()
                 self.embedding.weight[:, :hidden_size].fill_(1.0)
 
-    def forward(self, features: torch.Tensor, subject_ids: torch.Tensor | None = None) -> torch.Tensor:
+    def forward(
+        self, features: torch.Tensor, subject_ids: torch.Tensor | None = None
+    ) -> torch.Tensor:
         if features.ndim != 3:
             raise ValueError("features must be [batch, time, hidden]")
         if features.shape[-1] != self.hidden_size:

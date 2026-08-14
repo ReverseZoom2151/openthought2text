@@ -57,7 +57,9 @@ class ReducedChannelDistillationLoss(nn.Module):
         teacher_logits: torch.Tensor | None,
     ) -> None:
         if student_features.ndim != 3 or teacher_features.ndim != 3:
-            raise ValueError("student_features and teacher_features must be [batch, tokens, hidden]")
+            raise ValueError(
+                "student_features and teacher_features must be [batch, tokens, hidden]"
+            )
         if student_features.shape != teacher_features.shape:
             raise ValueError("student_features and teacher_features must have identical shapes")
         if token_mask.shape != student_features.shape[:2]:
@@ -67,7 +69,9 @@ class ReducedChannelDistillationLoss(nn.Module):
         if student_logits is not None:
             assert teacher_logits is not None
             if student_logits.ndim != 3 or teacher_logits.ndim != 3:
-                raise ValueError("student_logits and teacher_logits must be [batch, tokens, vocabulary]")
+                raise ValueError(
+                    "student_logits and teacher_logits must be [batch, tokens, vocabulary]"
+                )
             if student_logits.shape != teacher_logits.shape:
                 raise ValueError("student_logits and teacher_logits must have identical shapes")
             if student_logits.shape[:2] != student_features.shape[:2]:
@@ -81,7 +85,9 @@ class ReducedChannelDistillationLoss(nn.Module):
         student_logits: torch.Tensor | None = None,
         teacher_logits: torch.Tensor | None = None,
     ) -> ReducedChannelDistillationOutput:
-        self._validate(student_features, teacher_features, token_mask, student_logits, teacher_logits)
+        self._validate(
+            student_features, teacher_features, token_mask, student_logits, teacher_logits
+        )
         weights = token_mask.to(dtype=student_features.dtype)
         valid_count = weights.sum()
         denominator = valid_count.clamp_min(1)
@@ -93,11 +99,14 @@ class ReducedChannelDistillationLoss(nn.Module):
         if student_logits is not None:
             assert teacher_logits is not None
             temperature = self.config.temperature
-            token_kl = F.kl_div(
-                F.log_softmax(student_logits / temperature, dim=-1),
-                F.softmax(teacher_logits.detach() / temperature, dim=-1),
-                reduction="none",
-            ).sum(dim=-1) * temperature**2
+            token_kl = (
+                F.kl_div(
+                    F.log_softmax(student_logits / temperature, dim=-1),
+                    F.softmax(teacher_logits.detach() / temperature, dim=-1),
+                    reduction="none",
+                ).sum(dim=-1)
+                * temperature**2
+            )
             logits_loss = (token_kl * weights).sum() / denominator
             total = total + self.config.logits_weight * logits_loss
         return ReducedChannelDistillationOutput(

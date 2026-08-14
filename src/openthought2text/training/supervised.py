@@ -58,7 +58,9 @@ def supervised_train_step(
     loss.backward()
     gradient_norm = None
     if gradient_clip_norm is not None:
-        gradient_norm = float(torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip_norm))
+        gradient_norm = float(
+            torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip_norm)
+        )
     optimizer.step()
     return SupervisedStepResult(
         loss=float(loss.detach()),

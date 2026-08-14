@@ -114,7 +114,9 @@ def run_faithfulness_suite(
             raise ValueError(
                 f"{condition.value} returned {len(predictions)} predictions for {len(references)} references"
             )
-        scores = {metric.name: float(metric.evaluate(predictions, references)) for metric in metrics}
+        scores = {
+            metric.name: float(metric.evaluate(predictions, references)) for metric in metrics
+        }
         results.append(FaithfulnessConditionResult(condition, predictions, scores))
 
     full = next(result for result in results if result.condition is ControlCondition.FULL)

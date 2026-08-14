@@ -38,13 +38,17 @@ def test_target_accepting_generator_and_bad_alignment_are_rejected() -> None:
             unsafe, [[0.1]], ["sample"], lambda ids: "x", run_id="run-1"
         )
     with pytest.raises(ValueError, match="sample_ids"):
-        token_ids_to_prediction_records([[1], [2]], ["same", "same"], lambda ids: "x", run_id="run-1")
+        token_ids_to_prediction_records(
+            [[1], [2]], ["same", "same"], lambda ids: "x", run_id="run-1"
+        )
     with pytest.raises(ValueError, match="shape"):
         token_ids_to_prediction_records([1, 2], ["a", "b"], lambda ids: "x", run_id="run-1")
 
 
 def test_single_item_token_row_and_explicit_decoder_contract() -> None:
-    records = token_ids_to_prediction_records([1, 2, 3], ["sample"], lambda ids: str(list(ids)), run_id="run-1")
+    records = token_ids_to_prediction_records(
+        [1, 2, 3], ["sample"], lambda ids: str(list(ids)), run_id="run-1"
+    )
     assert records[0].prediction_text == "[1, 2, 3]"
     with pytest.raises(TypeError, match="text strings"):
         token_ids_to_prediction_records([[1]], ["sample"], lambda ids: ids, run_id="run-1")

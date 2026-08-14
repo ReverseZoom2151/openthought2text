@@ -25,7 +25,9 @@ class NeuralSelfSupervisionConfig:
 class NeuralReconstructionHead(nn.Module):
     """Target-free tokenwise reconstruction prediction from encoder features."""
 
-    def __init__(self, hidden_size: int, reconstruction_size: int, bottleneck_size: int | None = None) -> None:
+    def __init__(
+        self, hidden_size: int, reconstruction_size: int, bottleneck_size: int | None = None
+    ) -> None:
         super().__init__()
         if hidden_size < 1 or reconstruction_size < 1:
             raise ValueError("hidden_size and reconstruction_size must be positive")
@@ -40,6 +42,7 @@ class NeuralReconstructionHead(nn.Module):
             nn.GELU(),
             nn.Linear(bottleneck_size, reconstruction_size),
         )
+
     def forward(self, neural_features: torch.Tensor) -> torch.Tensor:
         if neural_features.ndim != 3 or neural_features.shape[-1] != self.hidden_size:
             raise ValueError("neural_features must be [batch, tokens, hidden_size]")
@@ -67,7 +70,11 @@ class NeuralReconstructionConsistencyObjective(nn.Module):
     No text/label argument is present in either path.
     """
 
-    def __init__(self, reconstruction_head: NeuralReconstructionHead, config: NeuralSelfSupervisionConfig | None = None) -> None:
+    def __init__(
+        self,
+        reconstruction_head: NeuralReconstructionHead,
+        config: NeuralSelfSupervisionConfig | None = None,
+    ) -> None:
         super().__init__()
         self.reconstruction_head = reconstruction_head
         self.config = config or NeuralSelfSupervisionConfig()
@@ -81,12 +88,20 @@ class NeuralReconstructionConsistencyObjective(nn.Module):
         secondary_features: torch.Tensor | None = None,
         secondary_mask: torch.Tensor | None = None,
     ) -> NeuralSelfSupervisionOutput:
-        if primary_features.ndim != 3 or primary_features.shape[-1] != self.reconstruction_head.hidden_size:
+        if (
+            primary_features.ndim != 3
+            or primary_features.shape[-1] != self.reconstruction_head.hidden_size
+        ):
             raise ValueError("primary_features must be [batch, tokens, hidden_size]")
         if primary_mask.shape != primary_features.shape[:2]:
             raise ValueError("primary_mask must be [batch, tokens]")
-        if reconstruction_targets.shape != (*primary_features.shape[:2], self.reconstruction_head.reconstruction_size):
-            raise ValueError("reconstruction_targets must align with primary features and reconstruction size")
+        if reconstruction_targets.shape != (
+            *primary_features.shape[:2],
+            self.reconstruction_head.reconstruction_size,
+        ):
+            raise ValueError(
+                "reconstruction_targets must align with primary features and reconstruction size"
+            )
         valid_primary = primary_mask.bool()
         if reconstruction_mask is None:
             reconstruction_mask = valid_primary
@@ -110,7 +125,8 @@ class NeuralReconstructionConsistencyObjective(nn.Module):
         reconstruction_weights = reconstruction_mask.to(dtype=primary_features.dtype)
         reconstruction_count = reconstruction_weights.sum()
         reconstruction_loss = (
-            (reconstruction - reconstruction_targets.detach()).square().mean(dim=-1) * reconstruction_weights
+            (reconstruction - reconstruction_targets.detach()).square().mean(dim=-1)
+            * reconstruction_weights
         ).sum() / reconstruction_count.clamp_min(1)
         if secondary_features is None:
             consistency_loss = primary_features.sum() * 0.0
@@ -122,7 +138,10 @@ class NeuralReconstructionConsistencyObjective(nn.Module):
             consistency_loss = (
                 (left - right).square().mean(dim=-1) * consistency_weights
             ).sum() / consistency_weights.sum().clamp_min(1)
-        loss = self.config.reconstruction_weight * reconstruction_loss + self.config.consistency_weight * consistency_loss
+        loss = (
+            self.config.reconstruction_weight * reconstruction_loss
+            + self.config.consistency_weight * consistency_loss
+        )
         return NeuralSelfSupervisionOutput(
             loss=loss,
             reconstruction_loss=reconstruction_loss,

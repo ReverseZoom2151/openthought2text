@@ -16,7 +16,9 @@ def validate_channel_geometry(
         raise ValueError("channel_mask must have shape [channels]")
     if len(channel_names) != coordinates.shape[0]:
         raise ValueError("channel_names must match coordinate count")
-    if len(set(channel_names)) != len(channel_names) or any(not name.strip() for name in channel_names):
+    if len(set(channel_names)) != len(channel_names) or any(
+        not name.strip() for name in channel_names
+    ):
         raise ValueError("channel names must be unique, non-empty strings")
     if not torch.isfinite(coordinates[channel_mask]).all():
         raise ValueError("coordinates for active channels must be finite")

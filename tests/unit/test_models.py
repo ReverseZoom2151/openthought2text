@@ -46,7 +46,9 @@ def test_encoder_is_invariant_to_appended_masked_channels():
     padded_signals = torch.cat([signals, torch.randn(1, 2, 24) * 100], dim=1)
     padded_coordinates = torch.cat([coordinates, torch.randn(1, 2, 3) * 100], dim=1)
     padded_mask = torch.tensor([[True, True, False, False]])
-    actual = encoder(padded_signals, channel_mask=padded_mask, coordinates=padded_coordinates).features
+    actual = encoder(
+        padded_signals, channel_mask=padded_mask, coordinates=padded_coordinates
+    ).features
     torch.testing.assert_close(actual, expected, rtol=1e-6, atol=1e-6)
 
 

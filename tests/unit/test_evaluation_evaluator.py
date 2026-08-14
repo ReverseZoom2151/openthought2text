@@ -56,7 +56,9 @@ def test_evaluator_rejects_unpaired_controls_and_missing_references() -> None:
         PredictionRecord("b", "no", "run-1", control="shuffled"),
     ]
     with pytest.raises(ValueError, match="exactly the full-signal"):
-        evaluate_saved_predictions(records, benchmark=_benchmark(), references={"a": "yes", "b": "no"})
+        evaluate_saved_predictions(
+            records, benchmark=_benchmark(), references={"a": "yes", "b": "no"}
+        )
     with pytest.raises(ValueError, match="missing reference"):
         evaluate_saved_predictions(
             [PredictionRecord("a", "yes", "run-1", control="full")], benchmark=_benchmark()

@@ -55,7 +55,9 @@ class TextErrorReport:
         return {category: count / len(self.records) for category, count in self.counts.items()}
 
 
-def classify_text_error(reference: str, hypothesis: str) -> tuple[TextErrorCategory, EditOperations]:
+def classify_text_error(
+    reference: str, hypothesis: str
+) -> tuple[TextErrorCategory, EditOperations]:
     """Classify one prediction with a documented, stable precedence order.
 
     Precedence is exact, empty output, repetition, pure/no-overlap hallucination,

@@ -7,15 +7,14 @@ versioned converter reads participant data with an approved MATLAB backend.
 
 from __future__ import annotations
 
+import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-import re
-from typing import Iterator
 
 from .manifest import DatasetManifest
 from .schema import InformationAccess, NeuralTextSample
-
 
 _TASK_PATTERN = re.compile(r"^task(?P<number>[123])-(?P<code>[A-Za-z]+)(?P<version>-2\.0)?$")
 _SUBJECT_PATTERN = re.compile(r"^results(?P<subject>[A-Za-z0-9]+)(?:[_-].*)?\.mat$", re.IGNORECASE)

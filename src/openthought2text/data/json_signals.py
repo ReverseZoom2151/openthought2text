@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
+import json
+import re
+from collections.abc import Iterable
 from enum import Enum
 from hashlib import sha256
-import json
 from pathlib import Path
-import re
-from typing import Iterable
 
 import torch
 
 from .manifest import DatasetManifest
 from .prepared import TensorBackedSample
 from .schema import NeuralTextSample
-
 
 _CHECKSUM_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
-import math
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,7 +42,11 @@ def calibration_summary(
     ece = 0.0
     for index in range(bins):
         lower, upper = index / bins, (index + 1) / bins
-        members = [item for item, probability in enumerate(probabilities) if lower <= probability < upper or (index == bins - 1 and probability == 1.0)]
+        members = [
+            item
+            for item, probability in enumerate(probabilities)
+            if lower <= probability < upper or (index == bins - 1 and probability == 1.0)
+        ]
         if not members:
             summaries.append(CalibrationBin(lower, upper, 0, None, None))
             continue
@@ -50,7 +54,10 @@ def calibration_summary(
         accuracy = sum(outcomes[item] for item in members) / len(members)
         ece += len(members) / len(probabilities) * abs(mean_confidence - accuracy)
         summaries.append(CalibrationBin(lower, upper, len(members), mean_confidence, accuracy))
-    brier = sum((probability - outcome) ** 2 for probability, outcome in zip(probabilities, outcomes, strict=True)) / len(probabilities)
+    brier = sum(
+        (probability - outcome) ** 2
+        for probability, outcome in zip(probabilities, outcomes, strict=True)
+    ) / len(probabilities)
     return CalibrationSummary(ece, brier, tuple(summaries))
 
 
@@ -59,16 +66,22 @@ def risk_coverage_curve(
 ) -> tuple[RiskCoveragePoint, ...]:
     """Risk as low-confidence candidate predictions are progressively withheld."""
     probabilities, outcomes = _validate(confidences, correctness)
-    ranked = sorted(zip(probabilities, outcomes, strict=True), key=lambda item: item[0], reverse=True)
+    ranked = sorted(
+        zip(probabilities, outcomes, strict=True), key=lambda item: item[0], reverse=True
+    )
     errors = 0
     points: list[RiskCoveragePoint] = []
     for selected, (confidence, outcome) in enumerate(ranked, start=1):
         errors += 1 - outcome
-        points.append(RiskCoveragePoint(selected / len(ranked), errors / selected, selected, confidence))
+        points.append(
+            RiskCoveragePoint(selected / len(ranked), errors / selected, selected, confidence)
+        )
     return tuple(points)
 
 
-def _validate(confidences: Sequence[float], correctness: Sequence[bool | int]) -> tuple[list[float], list[int]]:
+def _validate(
+    confidences: Sequence[float], correctness: Sequence[bool | int]
+) -> tuple[list[float], list[int]]:
     if not confidences or len(confidences) != len(correctness):
         raise ValueError("confidences and correctness must be non-empty and equally sized")
     probabilities = [float(item) for item in confidences]

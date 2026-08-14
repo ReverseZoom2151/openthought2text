@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .model_card_validation import compute_model_card_reference_bindings
 
@@ -44,7 +45,9 @@ def generate_model_card(
     _validate_inputs(evaluation, provenance, release_gate, artifact_references)
     status = ModelCardStatus.CLAIMED if release_gate.passed else ModelCardStatus.UNSUPPORTED
     bindings = compute_model_card_reference_bindings(evaluation, provenance, release_gate)
-    markdown = _render_markdown(evaluation, provenance, release_gate, status, artifact_references, bindings)
+    markdown = _render_markdown(
+        evaluation, provenance, release_gate, status, artifact_references, bindings
+    )
     return ModelCardArtifact(run_id=evaluation.run_id, status=status, markdown=markdown)
 
 
@@ -62,7 +65,9 @@ def _validate_inputs(
     required = {"evaluation_report", "provenance_report"}
     missing = required.difference(artifact_references)
     if missing:
-        raise ModelCardError(f"missing required artifact reference(s): {', '.join(sorted(missing))}")
+        raise ModelCardError(
+            f"missing required artifact reference(s): {', '.join(sorted(missing))}"
+        )
     for name, reference in artifact_references.items():
         if not isinstance(reference, str) or not reference.strip():
             raise ModelCardError(f"artifact reference {name!r} must be a non-empty string")
@@ -110,7 +115,15 @@ def _render_markdown(
             f"- Split definition: {_escape(provenance.information_access.split_definition)}",
         ]
     )
-    lines.extend(["", "## Artifact references", "", "| Artifact | Reference | SHA-256 |", "| --- | --- | --- |"])
+    lines.extend(
+        [
+            "",
+            "## Artifact references",
+            "",
+            "| Artifact | Reference | SHA-256 |",
+            "| --- | --- | --- |",
+        ]
+    )
     rows = (
         ("Evaluation report", references["evaluation_report"], "—"),
         ("Provenance report", references["provenance_report"], provenance.binding_sha256),
@@ -121,7 +134,10 @@ def _render_markdown(
         ("Split plan", provenance.split_plan.uri, provenance.split_plan.sha256),
         ("Resolved config", provenance.config.uri, provenance.config.sha256),
     )
-    lines.extend(f"| {_escape(name)} | `{_escape(reference)}` | `{checksum}` |" for name, reference, checksum in rows)
+    lines.extend(
+        f"| {_escape(name)} | `{_escape(reference)}` | `{checksum}` |"
+        for name, reference, checksum in rows
+    )
     lines.extend(
         [
             "",
@@ -134,7 +150,15 @@ def _render_markdown(
             f"| Release gate binding | `{bindings.release_gate_sha256}` |",
         ]
     )
-    lines.extend(["", "## Measured evaluation", "", "| Metric | Value | Grounded gain | Neural contribution |", "| --- | ---: | ---: | ---: |"])
+    lines.extend(
+        [
+            "",
+            "## Measured evaluation",
+            "",
+            "| Metric | Value | Grounded gain | Neural contribution |",
+            "| --- | ---: | ---: | ---: |",
+        ]
+    )
     for metric, value in sorted(evaluation.metrics.items()):
         grounding = evaluation.grounding.get(metric)
         gain = "—" if grounding is None else _number(grounding.grounded_gain)
@@ -142,7 +166,9 @@ def _render_markdown(
         lines.append(f"| `{_escape(metric)}` | {_number(value)} | {gain} | {contribution} |")
     lines.extend(["", "## Release-evidence gate", ""])
     if gate.passed:
-        lines.append("- **PASS:** required provenance, target-free audit, controls, and grounded evidence are present.")
+        lines.append(
+            "- **PASS:** required provenance, target-free audit, controls, and grounded evidence are present."
+        )
     else:
         lines.append("- **FAIL:** the following evidence is missing, mismatched, or insufficient:")
         lines.append("")

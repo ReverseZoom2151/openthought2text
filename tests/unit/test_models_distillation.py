@@ -14,7 +14,9 @@ def test_reduced_channel_distillation_matches_only_valid_features_and_backpropag
     changed = student.detach().clone()
     changed[~mask] = torch.randn_like(changed[~mask]) * 1_000
     second = criterion(changed, teacher, mask)
-    torch.testing.assert_close(first.representation_loss, second.representation_loss, rtol=0, atol=0)
+    torch.testing.assert_close(
+        first.representation_loss, second.representation_loss, rtol=0, atol=0
+    )
     assert first.logits_loss is None
     assert first.valid_token_count.item() == 4
     first.loss.backward()
@@ -25,7 +27,9 @@ def test_reduced_channel_distillation_matches_only_valid_features_and_backpropag
 def test_reduced_channel_distillation_optional_logits_is_temperature_scaled_and_masks_padding():
     torch.manual_seed(22)
     criterion = ReducedChannelDistillationLoss(
-        ReducedChannelDistillationConfig(representation_weight=0.5, logits_weight=2.0, temperature=2.0)
+        ReducedChannelDistillationConfig(
+            representation_weight=0.5, logits_weight=2.0, temperature=2.0
+        )
     )
     student_features = torch.randn(1, 3, 4, requires_grad=True)
     teacher_features = torch.randn(1, 3, 4, requires_grad=True)
@@ -39,7 +43,9 @@ def test_reduced_channel_distillation_optional_logits_is_temperature_scaled_and_
         teacher_logits,
     )
     assert output.logits_loss is not None and torch.isfinite(output.logits_loss)
-    torch.testing.assert_close(output.loss, 0.5 * output.representation_loss + 2.0 * output.logits_loss)
+    torch.testing.assert_close(
+        output.loss, 0.5 * output.representation_loss + 2.0 * output.logits_loss
+    )
     output.loss.backward()
     assert student_features.grad is not None and student_features.grad.abs().sum() > 0
     assert student_logits.grad is not None and student_logits.grad.abs().sum() > 0

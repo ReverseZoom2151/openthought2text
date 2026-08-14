@@ -24,7 +24,17 @@ def test_train_text_tokenizer_is_deterministic_and_encodes_decodes() -> None:
     second = train_row("b", "hello there")
     tokenizer = fit_train_text_tokenizer((second, first), unknown_policy="error")
 
-    assert tokenizer.vocabulary == ("<pad>", "<bos>", "<eos>", "<unk>", "hello", "!", ",", "there", "world")
+    assert tokenizer.vocabulary == (
+        "<pad>",
+        "<bos>",
+        "<eos>",
+        "<unk>",
+        "hello",
+        "!",
+        ",",
+        "there",
+        "world",
+    )
     assert tokenizer.special_ids == {"pad": 0, "bos": 1, "eos": 2, "unk": 3}
     assert tokenizer.decode(tokenizer.encode("Hello, world!")) == "hello, world!"
     assert tokenizer.fit_sample_ids == ("a", "b")

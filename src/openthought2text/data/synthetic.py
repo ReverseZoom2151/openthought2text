@@ -7,11 +7,11 @@ manifest, registry, and split-audit path in a fresh checkout.
 
 from __future__ import annotations
 
+import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-from typing import Iterator
 
 from .audit import AuditReport, audit_splits
 from .manifest import DatasetManifest, load_manifest, write_manifest

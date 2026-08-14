@@ -32,7 +32,10 @@ def test_factory_builds_current_architecture_and_stable_state_dict_fingerprint()
     first_description = describe_model_architecture(first)
     assert first.semantic_anchor_head is not None
     assert first_description["config"]["hidden_size"] == 12
-    assert any(item["name"] == "encoder.temporal.0.weight" for item in first_description["state_dict_schema"])
+    assert any(
+        item["name"] == "encoder.temporal.0.weight"
+        for item in first_description["state_dict_schema"]
+    )
     assert architecture_fingerprint(first) == architecture_fingerprint(second)
     # Materializing the lazy channel-independent conv does not alter the
     # architecture descriptor or checkpoint compatibility.

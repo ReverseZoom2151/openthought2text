@@ -7,7 +7,9 @@ from openthought2text.models import EvidenceGroundedCandidateRanker
 
 
 def _ranker() -> EvidenceGroundedCandidateRanker:
-    return EvidenceGroundedCandidateRanker(hidden_size=8, candidate_embedding_dim=5, num_queries=2, num_heads=2).eval()
+    return EvidenceGroundedCandidateRanker(
+        hidden_size=8, candidate_embedding_dim=5, num_queries=2, num_heads=2
+    ).eval()
 
 
 def test_candidate_ranker_shapes_masking_evidence_and_gradients():
@@ -34,7 +36,11 @@ def test_candidate_ranker_is_target_free_and_ignores_masked_neural_values():
     ranker = _ranker()
     signature = inspect.signature(ranker.forward)
     assert set(signature.parameters) == {
-        "neural_features", "neural_mask", "candidate_ids", "candidate_embeddings", "candidate_mask"
+        "neural_features",
+        "neural_mask",
+        "candidate_ids",
+        "candidate_embeddings",
+        "candidate_mask",
     }
     mask = torch.tensor([[True, True, False]])
     original = torch.randn(1, 3, 8)

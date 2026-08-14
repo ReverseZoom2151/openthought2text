@@ -3,7 +3,12 @@ from __future__ import annotations
 import pytest
 import torch
 
-from openthought2text.data import SensorDefinition, SensorLayout, SensorType, sensor_layout_to_tensor
+from openthought2text.data import (
+    SensorDefinition,
+    SensorLayout,
+    SensorType,
+    sensor_layout_to_tensor,
+)
 
 
 def layout() -> SensorLayout:

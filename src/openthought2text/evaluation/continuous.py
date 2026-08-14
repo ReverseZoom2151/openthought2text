@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-import math
 
 
 class WindowMergePolicy(str, Enum):
@@ -23,13 +23,21 @@ class TimestampedPredictionWindow:
     emitted_at_s: float | None = None
 
     def __post_init__(self) -> None:
-        if not (math.isfinite(self.start_s) and math.isfinite(self.end_s) and 0 <= self.start_s < self.end_s):
+        if not (
+            math.isfinite(self.start_s)
+            and math.isfinite(self.end_s)
+            and 0 <= self.start_s < self.end_s
+        ):
             raise ValueError("window must satisfy finite 0 <= start_s < end_s")
         if not isinstance(self.prediction_text, str) or not self.prediction_text.strip():
             raise ValueError("prediction_text must be non-empty")
-        if self.inference_duration_s is not None and (not math.isfinite(self.inference_duration_s) or self.inference_duration_s < 0):
+        if self.inference_duration_s is not None and (
+            not math.isfinite(self.inference_duration_s) or self.inference_duration_s < 0
+        ):
             raise ValueError("inference_duration_s must be finite and non-negative")
-        if self.emitted_at_s is not None and (not math.isfinite(self.emitted_at_s) or self.emitted_at_s < self.end_s):
+        if self.emitted_at_s is not None and (
+            not math.isfinite(self.emitted_at_s) or self.emitted_at_s < self.end_s
+        ):
             raise ValueError("emitted_at_s must be finite and no earlier than the window end")
 
 
@@ -88,22 +96,46 @@ def assemble_continuous_windows(
         raise ValueError("window coverage contains a gap larger than max_gap_s")
     selected = _apply_policy(ordered, policy)
     assembled_union, _, _ = _coverage_duration(selected)
-    coverage = ContinuousCoverage(source_union, assembled_union, overlap, sum(gaps), len(ordered), len(selected))
+    coverage = ContinuousCoverage(
+        source_union, assembled_union, overlap, sum(gaps), len(ordered), len(selected)
+    )
     if require_full_coverage and not coverage.fully_covered:
         raise ValueError("selected merge policy does not retain full source coverage")
-    return ContinuousAssembly(policy, selected, " ".join(window.prediction_text for window in selected), coverage)
+    return ContinuousAssembly(
+        policy, selected, " ".join(window.prediction_text for window in selected), coverage
+    )
 
 
 def summarize_continuous_timing(assembly: ContinuousAssembly) -> ContinuousTimingSummary:
     """Summarize observed compute and emission timing; this makes no capability claim."""
-    durations = [window.inference_duration_s for window in assembly.selected_windows if window.inference_duration_s is not None]
-    latencies = [window.emitted_at_s - window.end_s for window in assembly.selected_windows if window.emitted_at_s is not None]
+    durations = [
+        window.inference_duration_s
+        for window in assembly.selected_windows
+        if window.inference_duration_s is not None
+    ]
+    latencies = [
+        window.emitted_at_s - window.end_s
+        for window in assembly.selected_windows
+        if window.emitted_at_s is not None
+    ]
     total = None if len(durations) != len(assembly.selected_windows) else sum(durations)
-    rtf = None if total is None or assembly.coverage.source_duration_s == 0 else total / assembly.coverage.source_duration_s
-    return ContinuousTimingSummary(total, rtf, None if not latencies else sum(latencies) / len(latencies), None if not latencies else max(latencies), len(latencies))
+    rtf = (
+        None
+        if total is None or assembly.coverage.source_duration_s == 0
+        else total / assembly.coverage.source_duration_s
+    )
+    return ContinuousTimingSummary(
+        total,
+        rtf,
+        None if not latencies else sum(latencies) / len(latencies),
+        None if not latencies else max(latencies),
+        len(latencies),
+    )
 
 
-def _apply_policy(windows: Sequence[TimestampedPredictionWindow], policy: WindowMergePolicy) -> tuple[TimestampedPredictionWindow, ...]:
+def _apply_policy(
+    windows: Sequence[TimestampedPredictionWindow], policy: WindowMergePolicy
+) -> tuple[TimestampedPredictionWindow, ...]:
     if policy is WindowMergePolicy.CONCATENATE:
         return tuple(windows)
     selected: list[TimestampedPredictionWindow] = []
@@ -118,7 +150,9 @@ def _apply_policy(windows: Sequence[TimestampedPredictionWindow], policy: Window
     return tuple(selected)
 
 
-def _coverage_duration(windows: Sequence[TimestampedPredictionWindow]) -> tuple[float, float, list[float]]:
+def _coverage_duration(
+    windows: Sequence[TimestampedPredictionWindow],
+) -> tuple[float, float, list[float]]:
     if not windows:
         return 0.0, 0.0, []
     union = 0.0

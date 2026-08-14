@@ -50,7 +50,12 @@ def test_ctc_rejects_holey_mask_and_invalid_lengths():
     with pytest.raises(ValueError, match="prefix"):
         head(features, torch.tensor([[True, False, True]]))
     with pytest.raises(ValueError, match="no greater"):
-        head(features, torch.ones(1, 3, dtype=torch.bool), torch.tensor([[1, 2, 3, 1]]), torch.tensor([4]))
+        head(
+            features,
+            torch.ones(1, 3, dtype=torch.bool),
+            torch.tensor([[1, 2, 3, 1]]),
+            torch.tensor([4]),
+        )
 
 
 def test_greedy_ctc_collapse_honors_blanks_repetitions_and_prefix_mask():
@@ -58,5 +63,9 @@ def test_greedy_ctc_collapse_honors_blanks_repetitions_and_prefix_mask():
     logits = torch.full((2, 5, 3), -10.0)
     logits[0, torch.arange(5), torch.tensor([1, 1, 0, 1, 2])] = 10
     logits[1, torch.arange(5), torch.tensor([2, 2, 0, 1, 1])] = 10
-    decoded = greedy_ctc_decode(logits, blank_token_id=0, token_mask=torch.tensor([[1, 1, 1, 1, 1], [1, 1, 1, 1, 0]], dtype=torch.bool))
+    decoded = greedy_ctc_decode(
+        logits,
+        blank_token_id=0,
+        token_mask=torch.tensor([[1, 1, 1, 1, 1], [1, 1, 1, 1, 0]], dtype=torch.bool),
+    )
     assert decoded == [[1, 1, 2], [2, 1]]

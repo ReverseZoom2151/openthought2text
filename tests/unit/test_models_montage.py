@@ -8,7 +8,9 @@ def test_graph_montage_shapes_gradients_and_missing_channel_zeroing():
     adapter = GraphMontageAdapter(hidden_size=6)
     features = torch.randn(2, 3, 4, 6, requires_grad=True)
     mask = torch.tensor([[True, True, False], [True, False, True]])
-    coordinates = torch.tensor([[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [3.0, 0.0, 0.0]]]).expand(2, -1, -1)
+    coordinates = torch.tensor([[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [3.0, 0.0, 0.0]]]).expand(
+        2, -1, -1
+    )
     output = adapter(features, mask, coordinates)
     assert output.shape == features.shape
     assert torch.all(output[0, 2] == 0)

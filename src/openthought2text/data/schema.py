@@ -7,12 +7,12 @@ without loading potentially large recordings.
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
 from hashlib import sha256
-from typing import Any, Mapping
-import re
-
+from typing import Any
 
 SCHEMA_VERSION = "1.0"
 
@@ -56,7 +56,7 @@ class TimeInterval:
         if self.start_s < 0 or self.end_s <= self.start_s:
             raise SchemaError("interval must satisfy 0 <= start_s < end_s")
 
-    def overlaps(self, other: "TimeInterval", tolerance_s: float = 0.0) -> bool:
+    def overlaps(self, other: TimeInterval, tolerance_s: float = 0.0) -> bool:
         if tolerance_s < 0:
             raise ValueError("tolerance_s must be non-negative")
         return self.start_s < other.end_s + tolerance_s and other.start_s < self.end_s + tolerance_s
@@ -65,7 +65,7 @@ class TimeInterval:
         return {"start_s": self.start_s, "end_s": self.end_s}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "TimeInterval":
+    def from_dict(cls, data: Mapping[str, Any]) -> TimeInterval:
         return cls(start_s=float(data["start_s"]), end_s=float(data["end_s"]))
 
 
@@ -107,7 +107,7 @@ class SignalReference:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "SignalReference":
+    def from_dict(cls, data: Mapping[str, Any]) -> SignalReference:
         return cls(
             uri=str(data["uri"]),
             recording_id=str(data["recording_id"]),
@@ -151,7 +151,7 @@ class TextTarget:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "TextTarget":
+    def from_dict(cls, data: Mapping[str, Any]) -> TextTarget:
         return cls(
             text=str(data["text"]),
             language=str(data.get("language", "en")),
@@ -200,7 +200,7 @@ class InformationAccess:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "InformationAccess":
+    def from_dict(cls, data: Mapping[str, Any]) -> InformationAccess:
         return cls(**{key: data[key] for key in cls.__dataclass_fields__ if key in data})
 
 
@@ -228,7 +228,9 @@ class NeuralTextSample:
             _nonempty(getattr(self, field_name), field_name)
         if self.split is not None:
             _nonempty(self.split, "split")
-        if len(set(self.group_ids)) != len(self.group_ids) or any(not group for group in self.group_ids):
+        if len(set(self.group_ids)) != len(self.group_ids) or any(
+            not group for group in self.group_ids
+        ):
             raise SchemaError("group_ids must contain unique non-empty values")
 
     @property
@@ -259,7 +261,7 @@ class NeuralTextSample:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "NeuralTextSample":
+    def from_dict(cls, data: Mapping[str, Any]) -> NeuralTextSample:
         version = data.get("schema_version", SCHEMA_VERSION)
         if version != SCHEMA_VERSION:
             raise SchemaError(f"unsupported sample schema version: {version!r}")

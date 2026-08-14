@@ -7,7 +7,9 @@ from collections.abc import Mapping
 import torch
 
 
-def compose_losses(losses: Mapping[str, torch.Tensor], weights: Mapping[str, float]) -> torch.Tensor:
+def compose_losses(
+    losses: Mapping[str, torch.Tensor], weights: Mapping[str, float]
+) -> torch.Tensor:
     """Sum named losses, requiring an explicit weight for every active loss."""
 
     if not losses:

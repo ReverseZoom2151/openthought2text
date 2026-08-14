@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import math
-
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -60,8 +58,16 @@ class ContinuousNeuralEncoder(nn.Module):
 
     def _downsample_mask(self, mask: torch.Tensor, output_length: int) -> torch.Tensor:
         # Max pooling records whether the receptive window contains evidence.
-        pooled = F.max_pool1d(mask.float().unsqueeze(1), kernel_size=self.stride_samples,
-                              stride=self.stride_samples, ceil_mode=True).squeeze(1).bool()
+        pooled = (
+            F.max_pool1d(
+                mask.float().unsqueeze(1),
+                kernel_size=self.stride_samples,
+                stride=self.stride_samples,
+                ceil_mode=True,
+            )
+            .squeeze(1)
+            .bool()
+        )
         if pooled.shape[1] < output_length:
             pooled = F.pad(pooled, (0, output_length - pooled.shape[1]), value=False)
         return pooled[:, :output_length]
@@ -95,13 +101,18 @@ class ContinuousNeuralEncoder(nn.Module):
         # Process channels independently, then merge them with their geometry.
         per_channel = self.temporal(masked.reshape(batch * channels, 1, samples))
         tokens = per_channel.shape[-1]
-        per_channel = per_channel.view(batch, channels, self.hidden_size, tokens).permute(0, 1, 3, 2)
+        per_channel = per_channel.view(batch, channels, self.hidden_size, tokens).permute(
+            0, 1, 3, 2
+        )
         token_mask = self._downsample_mask(sample_mask, tokens)
         merged = self.channel_merger(per_channel, channel_mask, coordinates)
         merged = merged * token_mask.unsqueeze(-1).to(merged.dtype)
         contextual = self.context(merged, src_key_padding_mask=~token_mask)
         features = self.final_norm(contextual) * token_mask.unsqueeze(-1).to(contextual.dtype)
-        start = torch.arange(tokens, device=signals.device).unsqueeze(0).expand(batch, -1) * self.stride_samples
+        start = (
+            torch.arange(tokens, device=signals.device).unsqueeze(0).expand(batch, -1)
+            * self.stride_samples
+        )
         end = torch.clamp(start + self.stride_samples, max=samples)
         return NeuralEncoderOutput(
             features=features,

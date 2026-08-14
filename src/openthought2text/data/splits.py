@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import random
+from collections.abc import Iterable
 from dataclasses import dataclass, replace
 from enum import Enum
-import random
-from typing import Iterable
 
 from .schema import NeuralTextSample
 
@@ -85,8 +85,7 @@ class SplitPlan:
             "protocol": self.protocol.value,
             "seed": self.seed,
             "assignments": [
-                {"sample_id": sample_id, "split": split}
-                for sample_id, split in self.assignments
+                {"sample_id": sample_id, "split": split} for sample_id, split in self.assignments
             ],
             "excluded_sample_ids": list(self.excluded_sample_ids),
             "held_out_subject": self.held_out_subject,
@@ -274,9 +273,7 @@ def build_split_plan(
         if resolved_protocol == SplitProtocol.LOSO_SUBJECT_UNIQUE_TEXT:
             assert all(rows[index].target is not None for index in held_indices)
             held_texts = {
-                rows[index].target.fingerprint
-                for index in held_indices
-                if rows[index].target
+                rows[index].target.fingerprint for index in held_indices if rows[index].target
             }
             excluded_indices = {
                 index
@@ -288,7 +285,8 @@ def build_split_plan(
                 )
             }
         candidate_indices = [
-            index for index, sample in enumerate(rows)
+            index
+            for index, sample in enumerate(rows)
             if sample.subject_id != held_out and index not in excluded_indices
         ]
         if not candidate_indices:
@@ -301,10 +299,12 @@ def build_split_plan(
             validation_fraction=validation_fraction,
         )
         assigned = {index: "test" for index in held_indices}
-        assigned.update({
-            candidate_indices[candidate_index]: split
-            for candidate_index, split in candidate_assignments.items()
-        })
+        assigned.update(
+            {
+                candidate_indices[candidate_index]: split
+                for candidate_index, split in candidate_assignments.items()
+            }
+        )
 
     plan = SplitPlan(
         protocol=resolved_protocol,

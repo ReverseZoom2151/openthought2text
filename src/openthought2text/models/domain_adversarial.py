@@ -11,12 +11,16 @@ from torch.nn import functional as F
 
 class _GradientReversalFunction(torch.autograd.Function):
     @staticmethod
-    def forward(ctx: torch.autograd.function.FunctionCtx, values: torch.Tensor, scale: float) -> torch.Tensor:
+    def forward(
+        ctx: torch.autograd.function.FunctionCtx, values: torch.Tensor, scale: float
+    ) -> torch.Tensor:
         ctx.scale = scale
         return values.view_as(values)
 
     @staticmethod
-    def backward(ctx: torch.autograd.function.FunctionCtx, gradients: torch.Tensor) -> tuple[torch.Tensor, None]:
+    def backward(
+        ctx: torch.autograd.function.FunctionCtx, gradients: torch.Tensor
+    ) -> tuple[torch.Tensor, None]:
         return -ctx.scale * gradients, None
 
 
@@ -52,7 +56,9 @@ class CrossSubjectDomainAdversary(nn.Module):
         self.num_subjects = num_subjects
         self.classifier = nn.Linear(hidden_size, num_subjects)
 
-    def _pool(self, neural_features: torch.Tensor, token_mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def _pool(
+        self, neural_features: torch.Tensor, token_mask: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         if neural_features.ndim != 3 or neural_features.shape[-1] != self.hidden_size:
             raise ValueError("neural_features must be [batch, tokens, hidden_size]")
         if token_mask.shape != neural_features.shape[:2]:
@@ -85,7 +91,13 @@ class CrossSubjectDomainAdversary(nn.Module):
         pooled, counts = self._pool(neural_features, token_mask)
         if subject_ids.ndim != 1 or subject_ids.shape[0] != neural_features.shape[0]:
             raise ValueError("subject_ids must be [batch]")
-        if subject_ids.dtype not in (torch.int8, torch.int16, torch.int32, torch.int64, torch.uint8):
+        if subject_ids.dtype not in (
+            torch.int8,
+            torch.int16,
+            torch.int32,
+            torch.int64,
+            torch.uint8,
+        ):
             raise ValueError("subject_ids must have an integer dtype")
         ids = subject_ids.to(device=neural_features.device, dtype=torch.long)
         if ids.lt(0).any() or ids.ge(self.num_subjects).any():

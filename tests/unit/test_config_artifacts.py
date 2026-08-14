@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from openthought2text.config import config_checksum, load_json_config, resolve_named_configs
 
@@ -12,7 +13,8 @@ def test_load_config_checksum_and_named_resolution(tmp_path) -> None:
     config = load_json_config(path)
     assert config_checksum(config) == config_checksum({"nested": {"x": True}, "seed": 7})
     assert resolve_named_configs(model={"x": 1}, task={"x": 2}) == {
-        "model": {"x": 1}, "task": {"x": 2}
+        "model": {"x": 1},
+        "task": {"x": 2},
     }
 
 

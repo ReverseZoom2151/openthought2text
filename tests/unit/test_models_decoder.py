@@ -44,6 +44,8 @@ def test_generation_respects_eos_and_neural_mask_shape_validation():
         decoder.output_projection.weight.zero_()
     neural = torch.randn(1, 3, 12)
     mask = torch.ones(1, 3, dtype=torch.bool)
-    emitted = decoder.generate(neural, mask, DecoderGenerationConfig(max_new_tokens=6, eos_token_id=0))
+    emitted = decoder.generate(
+        neural, mask, DecoderGenerationConfig(max_new_tokens=6, eos_token_id=0)
+    )
     assert emitted.shape == (1, 1)
     assert emitted.item() == 0

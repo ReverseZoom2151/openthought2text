@@ -7,10 +7,11 @@ architecture data against the model they have constructed.
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
-import json
-from typing import Any, Mapping
+from typing import Any
 
 from .factory import architecture_fingerprint, describe_model_architecture
 from .model import NeuralToTextModel
@@ -107,8 +108,13 @@ def validate_checkpoint_architecture(
             except (TypeError, ValueError) as error:
                 errors.append(f"checkpoint architecture_description is not canonical JSON: {error}")
             else:
-                if observed_fingerprint is not None and metadata_fingerprint != observed_fingerprint:
-                    errors.append("checkpoint fingerprint does not match its architecture_description")
+                if (
+                    observed_fingerprint is not None
+                    and metadata_fingerprint != observed_fingerprint
+                ):
+                    errors.append(
+                        "checkpoint fingerprint does not match its architecture_description"
+                    )
             errors.extend(_field_mismatches(expected_description, observed_description))
     return CheckpointArchitectureCompatibility(
         compatible=not errors,

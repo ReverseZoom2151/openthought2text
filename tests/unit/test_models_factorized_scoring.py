@@ -12,7 +12,9 @@ from openthought2text.models import (
 
 
 def _weights():
-    return ValidationFittedScoreWeights(2.0, 3.0, -1.0, validation_examples=4, ridge_regularization=0.1)
+    return ValidationFittedScoreWeights(
+        2.0, 3.0, -1.0, validation_examples=4, ridge_regularization=0.1
+    )
 
 
 def test_factorized_scoring_accounts_for_each_component_masks_and_ranking():
@@ -35,7 +37,13 @@ def test_factorized_scoring_exposes_zero_neural_and_lm_controls_and_has_no_targe
         _weights(), FactorizedScoringControl(lambda_neural=0.0, lambda_lm=0.0)
     )
     signature = inspect.signature(scorer.forward)
-    assert set(signature.parameters) == {"neural_scores", "lm_scores", "length_scores", "candidate_ids", "candidate_mask"}
+    assert set(signature.parameters) == {
+        "neural_scores",
+        "lm_scores",
+        "length_scores",
+        "candidate_ids",
+        "candidate_mask",
+    }
     output = scorer(
         torch.tensor([[100.0, -100.0]]),
         torch.tensor([[-100.0, 100.0]]),
@@ -61,4 +69,6 @@ def test_validation_fit_is_frozen_and_rejects_invalid_validation_inputs():
     with pytest.raises(ValueError, match="positive"):
         fit_factorized_score_weights(neural, lm, length, utility, ridge_regularization=0)
     with pytest.raises(ValueError, match="finite"):
-        fit_factorized_score_weights(neural, lm, length, torch.tensor([1.0, 2.0, float("nan"), 4.0]))
+        fit_factorized_score_weights(
+            neural, lm, length, torch.tensor([1.0, 2.0, float("nan"), 4.0])
+        )

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import Sequence
 
 import torch
 
@@ -55,25 +55,45 @@ def _augment_values(
     valid = channel_mask.unsqueeze(-1) & time_mask.unsqueeze(0)
     result = torch.where(valid, values, torch.zeros_like(values))
     if config.temporal_mask_probability:
-        selected_times = (torch.rand(time_mask.shape, device=values.device, generator=generator)
-                          < config.temporal_mask_probability) & time_mask
+        selected_times = (
+            torch.rand(time_mask.shape, device=values.device, generator=generator)
+            < config.temporal_mask_probability
+        ) & time_mask
         result[:, selected_times] = 0
     if config.channel_dropout_probability:
-        dropped = (torch.rand(channel_mask.shape, device=values.device, generator=generator)
-                   < config.channel_dropout_probability) & channel_mask
+        dropped = (
+            torch.rand(channel_mask.shape, device=values.device, generator=generator)
+            < config.channel_dropout_probability
+        ) & channel_mask
         # Keep at least one observed channel whenever one was available.
         if dropped[channel_mask].all():
             available = torch.nonzero(channel_mask, as_tuple=False).flatten()
-            keep = available[torch.randint(len(available), (1,), generator=generator, device=values.device)]
+            keep = available[
+                torch.randint(len(available), (1,), generator=generator, device=values.device)
+            ]
             dropped[keep] = False
         result[dropped, :] = 0
     if config.additive_noise_std:
-        noise = torch.randn(result.shape, dtype=result.dtype, device=result.device, generator=generator)
-        result = torch.where(valid, result + noise * config.additive_noise_std, torch.zeros_like(result))
+        noise = torch.randn(
+            result.shape, dtype=result.dtype, device=result.device, generator=generator
+        )
+        result = torch.where(
+            valid, result + noise * config.additive_noise_std, torch.zeros_like(result)
+        )
     if config.max_time_shift:
         if not time_shift_safe:
-            raise ValueError("nonzero time shift requires declared time_shift_alignment_safe metadata")
-        shift = int(torch.randint(-config.max_time_shift, config.max_time_shift + 1, (1,), generator=generator, device=values.device))
+            raise ValueError(
+                "nonzero time shift requires declared time_shift_alignment_safe metadata"
+            )
+        shift = int(
+            torch.randint(
+                -config.max_time_shift,
+                config.max_time_shift + 1,
+                (1,),
+                generator=generator,
+                device=values.device,
+            )
+        )
         # Roll only the observed temporal region; masked/padded values stay zero.
         indices = torch.nonzero(time_mask, as_tuple=False).flatten()
         result[:, indices] = result[:, indices].roll(shift, dims=1)
@@ -108,12 +128,18 @@ def augment_neural_tensor_batch(
     are rejected here even if they were allowed during individual preparation.
     """
     if config.max_time_shift:
-        raise ValueError("time shifts require per-sample alignment metadata; augment samples before collation")
+        raise ValueError(
+            "time shifts require per-sample alignment metadata; augment samples before collation"
+        )
     signals = torch.zeros_like(batch.signals)
     for index in range(batch.signals.shape[0]):
         generator = _generator(seed + index, batch.signals.device)
         signals[index] = _augment_values(
-            batch.signals[index], batch.channel_mask[index], batch.time_mask[index], config, generator,
+            batch.signals[index],
+            batch.channel_mask[index],
+            batch.time_mask[index],
+            config,
+            generator,
             time_shift_safe=False,
         )
     return NeuralTensorBatch(

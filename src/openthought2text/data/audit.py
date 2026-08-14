@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from collections.abc import Iterable
+from dataclasses import dataclass
 from enum import Enum
-from typing import Iterable, Mapping
 
 from .schema import InformationAccess, NeuralTextSample
 
@@ -87,33 +87,57 @@ def audit_splits(
     seen_ids: set[str] = set()
     for sample in rows:
         if sample.sample_id in seen_ids:
-            findings.append(AuditFinding("DUPLICATE_SAMPLE_ID", Severity.ERROR,
-                                         "sample_id appears more than once", (sample.sample_id,)))
+            findings.append(
+                AuditFinding(
+                    "DUPLICATE_SAMPLE_ID",
+                    Severity.ERROR,
+                    "sample_id appears more than once",
+                    (sample.sample_id,),
+                )
+            )
         seen_ids.add(sample.sample_id)
         if sample.split is None:
-            findings.append(AuditFinding("MISSING_SPLIT", Severity.ERROR,
-                                         "sample lacks a declared split", (sample.sample_id,)))
+            findings.append(
+                AuditFinding(
+                    "MISSING_SPLIT",
+                    Severity.ERROR,
+                    "sample lacks a declared split",
+                    (sample.sample_id,),
+                )
+            )
 
     if information_access and information_access.inference_label_leakage:
-        findings.append(AuditFinding(
-            "INFERENCE_TEXT_ACCESS", Severity.ERROR,
-            "target text or text context is declared visible at inference; free generation is invalid",
-        ))
+        findings.append(
+            AuditFinding(
+                "INFERENCE_TEXT_ACCESS",
+                Severity.ERROR,
+                "target text or text context is declared visible at inference; free generation is invalid",
+            )
+        )
     if information_access and information_access.inference_token_boundaries:
-        findings.append(AuditFinding(
-            "INFERENCE_TOKEN_BOUNDARIES", Severity.WARNING,
-            "gold token boundaries are visible at inference; report this as an aligned regime",
-        ))
+        findings.append(
+            AuditFinding(
+                "INFERENCE_TOKEN_BOUNDARIES",
+                Severity.WARNING,
+                "gold token boundaries are visible at inference; report this as an aligned regime",
+            )
+        )
     if information_access and information_access.inference_event_boundaries:
-        findings.append(AuditFinding(
-            "INFERENCE_EVENT_BOUNDARIES", Severity.WARNING,
-            "event boundaries are visible at inference; report this as an event-aligned regime",
-        ))
+        findings.append(
+            AuditFinding(
+                "INFERENCE_EVENT_BOUNDARIES",
+                Severity.WARNING,
+                "event boundaries are visible at inference; report this as an event-aligned regime",
+            )
+        )
     if information_access and information_access.inference_stimulus_audio:
-        findings.append(AuditFinding(
-            "INFERENCE_STIMULUS_AUDIO", Severity.ERROR,
-            "stimulus audio is declared visible at inference; this is not neural-only decoding",
-        ))
+        findings.append(
+            AuditFinding(
+                "INFERENCE_STIMULUS_AUDIO",
+                Severity.ERROR,
+                "stimulus audio is declared visible at inference; this is not neural-only decoding",
+            )
+        )
 
     by_group: dict[str, list[NeuralTextSample]] = defaultdict(list)
     by_text: dict[str, list[NeuralTextSample]] = defaultdict(list)
@@ -128,21 +152,29 @@ def audit_splits(
     for group_id, grouped in sorted(by_group.items()):
         splits = _distinct_splits(grouped)
         if len(splits) > 1:
-            findings.append(AuditFinding(
-                "GROUP_ACROSS_SPLITS", Severity.ERROR,
-                f"group {group_id!r} occurs in multiple splits",
-                tuple(sorted(sample.sample_id for sample in grouped)), splits,
-            ))
+            findings.append(
+                AuditFinding(
+                    "GROUP_ACROSS_SPLITS",
+                    Severity.ERROR,
+                    f"group {group_id!r} occurs in multiple splits",
+                    tuple(sorted(sample.sample_id for sample in grouped)),
+                    splits,
+                )
+            )
 
     for fingerprint, grouped in sorted(by_text.items()):
         splits = _distinct_splits(grouped)
         if len(splits) > 1:
             severity = Severity.ERROR if reject_duplicate_text else Severity.WARNING
-            findings.append(AuditFinding(
-                "DUPLICATE_TARGET_TEXT", severity,
-                f"normalized target text {fingerprint[:12]}… occurs in multiple splits",
-                tuple(sorted(sample.sample_id for sample in grouped)), splits,
-            ))
+            findings.append(
+                AuditFinding(
+                    "DUPLICATE_TARGET_TEXT",
+                    severity,
+                    f"normalized target text {fingerprint[:12]}… occurs in multiple splits",
+                    tuple(sorted(sample.sample_id for sample in grouped)),
+                    splits,
+                )
+            )
 
     for recording_key, grouped in sorted(by_recording.items()):
         ordered = sorted(grouped, key=lambda sample: sample.interval.start_s)
@@ -151,19 +183,25 @@ def audit_splits(
                 if right.interval.start_s >= left.interval.end_s + interval_tolerance_s:
                     break
                 if left.split != right.split and left.split is not None and right.split is not None:
-                    findings.append(AuditFinding(
-                        "CONTINUOUS_INTERVAL_OVERLAP", Severity.ERROR,
-                        f"overlapping windows in recording {recording_key!r} cross splits",
-                        tuple(sorted((left.sample_id, right.sample_id))),
-                        tuple(sorted((left.split, right.split))),
-                    ))
+                    findings.append(
+                        AuditFinding(
+                            "CONTINUOUS_INTERVAL_OVERLAP",
+                            Severity.ERROR,
+                            f"overlapping windows in recording {recording_key!r} cross splits",
+                            tuple(sorted((left.sample_id, right.sample_id))),
+                            tuple(sorted((left.split, right.split))),
+                        )
+                    )
 
     if pretraining is not None:
         if not pretraining.declared:
-            findings.append(AuditFinding(
-                "PRETRAINING_PROVENANCE_UNDECLARED", Severity.WARNING,
-                "no declared pretraining exposure; overlap cannot be ruled out",
-            ))
+            findings.append(
+                AuditFinding(
+                    "PRETRAINING_PROVENANCE_UNDECLARED",
+                    Severity.WARNING,
+                    "no declared pretraining exposure; overlap cannot be ruled out",
+                )
+            )
         for sample in rows:
             overlap: str | None = None
             if sample.sample_id in pretraining.sample_ids:
@@ -175,10 +213,14 @@ def audit_splits(
             elif sample.target and sample.target.fingerprint in pretraining.target_fingerprints:
                 overlap = "target text"
             if overlap:
-                findings.append(AuditFinding(
-                    "PRETRAINING_OVERLAP", Severity.ERROR,
-                    f"{overlap} was declared as used for pretraining",
-                    (sample.sample_id,), (sample.split,) if sample.split else (),
-                ))
+                findings.append(
+                    AuditFinding(
+                        "PRETRAINING_OVERLAP",
+                        Severity.ERROR,
+                        f"{overlap} was declared as used for pretraining",
+                        (sample.sample_id,),
+                        (sample.split,) if sample.split else (),
+                    )
+                )
 
     return AuditReport(tuple(findings), sample_count=len(rows))

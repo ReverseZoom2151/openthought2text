@@ -15,7 +15,6 @@ from torch import nn
 
 from .types import NeuralEncoderOutput, TokenTiming
 
-
 OverlapLabel = Literal["disjoint", "unknown", "potential_overlap", "same_dataset"]
 
 
@@ -52,8 +51,13 @@ class FoundationPretrainingProvenance:
         if not isinstance(self.source_name, str) or not self.source_name.strip():
             raise ValueError("source_name must be nonempty")
         if self.overlap_label not in {"disjoint", "unknown", "potential_overlap", "same_dataset"}:
-            raise ValueError("overlap_label must be disjoint, unknown, potential_overlap, or same_dataset")
-        if not isinstance(self.pretraining_description, str) or not self.pretraining_description.strip():
+            raise ValueError(
+                "overlap_label must be disjoint, unknown, potential_overlap, or same_dataset"
+            )
+        if (
+            not isinstance(self.pretraining_description, str)
+            or not self.pretraining_description.strip()
+        ):
             raise ValueError("pretraining_description must be nonempty")
 
 
@@ -100,7 +104,7 @@ class FoundationEncoderWrapper(nn.Module):
         if not trainable:
             self.external_encoder.eval()
 
-    def train(self, mode: bool = True) -> "FoundationEncoderWrapper":
+    def train(self, mode: bool = True) -> FoundationEncoderWrapper:
         super().train(mode)
         if not self._trainable:
             self.external_encoder.eval()
@@ -125,9 +129,13 @@ class FoundationEncoderWrapper(nn.Module):
         except TypeError as error:
             raise ValueError("external_encoder must implement forward(features, mask)") from error
         if not isinstance(outputs, torch.Tensor) or outputs.shape != (
-            features.shape[0], features.shape[1], self.feature_contract.output_feature_size
+            features.shape[0],
+            features.shape[1],
+            self.feature_contract.output_feature_size,
         ):
-            raise ValueError("external_encoder must return [batch, tokens, contract.output_feature_size]")
+            raise ValueError(
+                "external_encoder must return [batch, tokens, contract.output_feature_size]"
+            )
         return NeuralEncoderOutput(
             features=outputs * valid.unsqueeze(-1).to(outputs.dtype),
             mask=valid,

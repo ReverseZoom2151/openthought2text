@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
-import json
-import math
-from typing import Any, Mapping
+from typing import Any
 
 import torch
 
@@ -21,7 +22,9 @@ class SensorType(str, Enum):
 _TYPE_IDS = {SensorType.EEG: 1, SensorType.MEG: 2, SensorType.INTRACORTICAL: 3}
 
 
-def _vector(value: object, name: str, *, optional: bool = False) -> tuple[float, float, float] | None:
+def _vector(
+    value: object, name: str, *, optional: bool = False
+) -> tuple[float, float, float] | None:
     if value is None and optional:
         return None
     if not isinstance(value, (list, tuple)) or len(value) != 3:
@@ -46,7 +49,9 @@ class SensorDefinition:
         if not isinstance(self.name, str) or not self.name.strip():
             raise ValueError("sensor name must be non-empty")
         object.__setattr__(self, "position", _vector(self.position, "position"))
-        object.__setattr__(self, "orientation", _vector(self.orientation, "orientation", optional=True))
+        object.__setattr__(
+            self, "orientation", _vector(self.orientation, "orientation", optional=True)
+        )
         if not isinstance(self.sensor_type, SensorType):
             raise ValueError("sensor_type must be a SensorType")
 
@@ -61,7 +66,7 @@ class SensorDefinition:
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "SensorDefinition":
+    def from_dict(cls, data: Mapping[str, Any]) -> SensorDefinition:
         try:
             return cls(
                 name=str(data["name"]),
@@ -90,19 +95,27 @@ class SensorLayout:
             raise ValueError("sensor layout names must be unique and ordered")
 
     def to_dict(self) -> dict[str, object]:
-        return {"layout_id": self.layout_id, "sensors": [sensor.to_dict() for sensor in self.sensors]}
+        return {
+            "layout_id": self.layout_id,
+            "sensors": [sensor.to_dict() for sensor in self.sensors],
+        }
 
     @property
     def checksum(self) -> str:
-        payload = json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+        payload = json.dumps(
+            self.to_dict(), sort_keys=True, separators=(",", ":"), ensure_ascii=True
+        )
         return sha256(payload.encode("utf-8")).hexdigest()
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "SensorLayout":
+    def from_dict(cls, data: Mapping[str, Any]) -> SensorLayout:
         sensors = data.get("sensors")
         if not isinstance(sensors, list):
             raise ValueError("sensor layout sensors must be a list")
-        return cls(layout_id=str(data.get("layout_id", "")), sensors=tuple(SensorDefinition.from_dict(item) for item in sensors))
+        return cls(
+            layout_id=str(data.get("layout_id", "")),
+            sensors=tuple(SensorDefinition.from_dict(item) for item in sensors),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,7 +147,9 @@ class SensorLayoutTensor:
             raise ValueError("sensor tensor padding metadata must be zero/false")
 
 
-def sensor_layout_to_tensor(layout: SensorLayout, *, max_sensors: int | None = None) -> SensorLayoutTensor:
+def sensor_layout_to_tensor(
+    layout: SensorLayout, *, max_sensors: int | None = None
+) -> SensorLayoutTensor:
     """Tensorize ordered layout geometry, leaving every padded slot inert."""
     count = len(layout.sensors)
     size = count if max_sensors is None else max_sensors

@@ -7,14 +7,14 @@ metadata and emits a text-minimized conversion plan only.
 
 from __future__ import annotations
 
+import json
+import math
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
-import json
-import math
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Protocol, runtime_checkable
-
+from typing import Any, Protocol, runtime_checkable
 
 ZUCO_RAW_PLAN_KIND = "openthought2text.zuco_raw_conversion_plan"
 ZUCO_RAW_PLAN_VERSION = "1.0"
@@ -128,56 +128,128 @@ def _string(value: object) -> bool:
 
 
 def _finite_positive(value: object) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(float(value)) and float(value) > 0
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+        and float(value) > 0
+    )
 
 
-def _issue(issues: list[ZuCoDataQualityIssue], code: str, message: str, index: int, field: str) -> None:
+def _issue(
+    issues: list[ZuCoDataQualityIssue], code: str, message: str, index: int, field: str
+) -> None:
     issues.append(ZuCoDataQualityIssue(code, ZuCoDataQualitySeverity.ERROR, message, index, field))
 
 
-def _validated_record(record: Mapping[str, Any], index: int, issues: list[ZuCoDataQualityIssue]) -> ZuCoConversionRecord | None:
+def _validated_record(
+    record: Mapping[str, Any], index: int, issues: list[ZuCoDataQualityIssue]
+) -> ZuCoConversionRecord | None:
     for key in ("subject_id", "task"):
         if not _string(record.get(key)):
             _issue(issues, "MISSING_RECORD_FIELD", f"{key} must be a non-empty string", index, key)
-    sentence, words, fixations, eeg = (record.get(key) for key in ("sentence", "words", "fixations", "eeg"))
+    sentence, words, fixations, eeg = (
+        record.get(key) for key in ("sentence", "words", "fixations", "eeg")
+    )
     if not isinstance(sentence, Mapping):
-        _issue(issues, "MISSING_SENTENCE_ALIGNMENT", "sentence mapping is required", index, "sentence")
+        _issue(
+            issues, "MISSING_SENTENCE_ALIGNMENT", "sentence mapping is required", index, "sentence"
+        )
     elif not _string(sentence.get("sentence_id")) or not _string(sentence.get("text")):
-        _issue(issues, "MALFORMED_SENTENCE_ALIGNMENT", "sentence_id and text are required", index, "sentence")
+        _issue(
+            issues,
+            "MALFORMED_SENTENCE_ALIGNMENT",
+            "sentence_id and text are required",
+            index,
+            "sentence",
+        )
     if not isinstance(words, list) or not words:
         _issue(issues, "MISSING_WORD_ALIGNMENT", "words must be a non-empty list", index, "words")
         words = []
     word_indices: set[int] = set()
     for word in words:
-        if not isinstance(word, Mapping) or not isinstance(word.get("word_index"), int) or not _string(word.get("text")) or not _finite_positive(word.get("end_s")) or not isinstance(word.get("start_s"), (int, float)) or float(word["start_s"]) < 0 or float(word["end_s"]) < float(word["start_s"]):
-            _issue(issues, "MALFORMED_WORD_ALIGNMENT", "each word needs index, text, and nonnegative timing", index, "words")
+        if (
+            not isinstance(word, Mapping)
+            or not isinstance(word.get("word_index"), int)
+            or not _string(word.get("text"))
+            or not _finite_positive(word.get("end_s"))
+            or not isinstance(word.get("start_s"), (int, float))
+            or float(word["start_s"]) < 0
+            or float(word["end_s"]) < float(word["start_s"])
+        ):
+            _issue(
+                issues,
+                "MALFORMED_WORD_ALIGNMENT",
+                "each word needs index, text, and nonnegative timing",
+                index,
+                "words",
+            )
             continue
         word_indices.add(word["word_index"])
     if word_indices and word_indices != set(range(len(words))):
-        _issue(issues, "NONCANONICAL_WORD_INDICES", "word indices must be contiguous from zero", index, "words")
+        _issue(
+            issues,
+            "NONCANONICAL_WORD_INDICES",
+            "word indices must be contiguous from zero",
+            index,
+            "words",
+        )
     if not isinstance(fixations, list):
         _issue(issues, "MISSING_FIXATION_ALIGNMENT", "fixations must be a list", index, "fixations")
         fixations = []
     for fixation in fixations:
-        if not isinstance(fixation, Mapping) or fixation.get("word_index") not in word_indices or not isinstance(fixation.get("start_s"), (int, float)) or not _finite_positive(fixation.get("end_s")) or float(fixation["end_s"]) < float(fixation["start_s"]):
-            _issue(issues, "MALFORMED_FIXATION_ALIGNMENT", "fixation must reference a word with valid timing", index, "fixations")
+        if (
+            not isinstance(fixation, Mapping)
+            or fixation.get("word_index") not in word_indices
+            or not isinstance(fixation.get("start_s"), (int, float))
+            or not _finite_positive(fixation.get("end_s"))
+            or float(fixation["end_s"]) < float(fixation["start_s"])
+        ):
+            _issue(
+                issues,
+                "MALFORMED_FIXATION_ALIGNMENT",
+                "fixation must reference a word with valid timing",
+                index,
+                "fixations",
+            )
     if not isinstance(eeg, Mapping):
         _issue(issues, "MISSING_EEG_ALIGNMENT", "eeg alignment mapping is required", index, "eeg")
-    elif not _string(eeg.get("recording_id")) or not _finite_positive(eeg.get("sampling_rate_hz")) or not isinstance(eeg.get("channel_count"), int) or eeg["channel_count"] < 1:
-        _issue(issues, "MALFORMED_EEG_ALIGNMENT", "eeg needs recording_id, positive sampling_rate_hz, and channel_count", index, "eeg")
-    if any(item.record_index == index and item.severity == ZuCoDataQualitySeverity.ERROR for item in issues):
+    elif (
+        not _string(eeg.get("recording_id"))
+        or not _finite_positive(eeg.get("sampling_rate_hz"))
+        or not isinstance(eeg.get("channel_count"), int)
+        or eeg["channel_count"] < 1
+    ):
+        _issue(
+            issues,
+            "MALFORMED_EEG_ALIGNMENT",
+            "eeg needs recording_id, positive sampling_rate_hz, and channel_count",
+            index,
+            "eeg",
+        )
+    if any(
+        item.record_index == index and item.severity == ZuCoDataQualitySeverity.ERROR
+        for item in issues
+    ):
         return None
     assert isinstance(sentence, Mapping) and isinstance(eeg, Mapping)
     text = str(sentence["text"])
     return ZuCoConversionRecord(
-        subject_id=str(record["subject_id"]), task=str(record["task"]), sentence_id=str(sentence["sentence_id"]),
-        sentence_text_sha256=sha256(text.encode("utf-8")).hexdigest(), word_count=len(words),
-        fixation_count=len(fixations), recording_id=str(eeg["recording_id"]),
-        sampling_rate_hz=float(eeg["sampling_rate_hz"]), channel_count=int(eeg["channel_count"]),
+        subject_id=str(record["subject_id"]),
+        task=str(record["task"]),
+        sentence_id=str(sentence["sentence_id"]),
+        sentence_text_sha256=sha256(text.encode("utf-8")).hexdigest(),
+        word_count=len(words),
+        fixation_count=len(fixations),
+        recording_id=str(eeg["recording_id"]),
+        sampling_rate_hz=float(eeg["sampling_rate_hz"]),
+        channel_count=int(eeg["channel_count"]),
     )
 
 
-def validate_zuco_alignment_records(records: Iterable[Mapping[str, Any]]) -> tuple[ZuCoDataQualityReport, tuple[ZuCoConversionRecord, ...]]:
+def validate_zuco_alignment_records(
+    records: Iterable[Mapping[str, Any]],
+) -> tuple[ZuCoDataQualityReport, tuple[ZuCoConversionRecord, ...]]:
     """Validate plain reader mappings; no filesystem or MATLAB access occurs here."""
     issues: list[ZuCoDataQualityIssue] = []
     converted: list[ZuCoConversionRecord] = []
@@ -185,13 +257,25 @@ def validate_zuco_alignment_records(records: Iterable[Mapping[str, Any]]) -> tup
     for index, record in enumerate(records):
         count += 1
         if not isinstance(record, Mapping):
-            _issue(issues, "MALFORMED_ALIGNMENT_RECORD", "reader record must be a mapping", index, "record")
+            _issue(
+                issues,
+                "MALFORMED_ALIGNMENT_RECORD",
+                "reader record must be a mapping",
+                index,
+                "record",
+            )
             continue
         converted_record = _validated_record(record, index, issues)
         if converted_record is not None:
             converted.append(converted_record)
     if not count:
-        issues.append(ZuCoDataQualityIssue("NO_ALIGNMENT_RECORDS", ZuCoDataQualitySeverity.ERROR, "authorized reader returned no records"))
+        issues.append(
+            ZuCoDataQualityIssue(
+                "NO_ALIGNMENT_RECORDS",
+                ZuCoDataQualitySeverity.ERROR,
+                "authorized reader returned no records",
+            )
+        )
     return ZuCoDataQualityReport(count, tuple(issues)), tuple(converted)
 
 
@@ -206,10 +290,16 @@ def plan_authorized_zuco_raw_conversion(
         raise TypeError("reader must implement AuthorizedZuCoReader")
     if not authorization_id.strip() or reader.authorization_id != authorization_id:
         raise PermissionError("authorized reader identifier does not match requested authorization")
-    report, records = validate_zuco_alignment_records(reader.read_alignment_records(source_root_identifier))
+    report, records = validate_zuco_alignment_records(
+        reader.read_alignment_records(source_root_identifier)
+    )
     if not report.passed:
         return report, None
-    summary = {"records_seen": report.record_count, "records_valid": len(records), "errors": len(report.errors)}
+    summary = {
+        "records_seen": report.record_count,
+        "records_valid": len(records),
+        "errors": len(report.errors),
+    }
     return report, ZuCoRawConversionPlan(authorization_id, source_root_identifier, records, summary)
 
 
@@ -218,4 +308,6 @@ def write_zuco_raw_conversion_plan(path: str | Path, plan: ZuCoRawConversionPlan
     if destination.suffix.casefold() != ".json":
         raise ValueError("ZuCo conversion plans must be written as .json")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(plan.to_dict(), sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    destination.write_text(
+        json.dumps(plan.to_dict(), sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8"
+    )

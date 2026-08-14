@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
-import json
-import re
 from typing import Any
 
 
@@ -60,7 +60,9 @@ def validate_model_card_references(
     if not isinstance(markdown, str):
         raise TypeError("markdown must be text")
     found: dict[str, list[str]] = {}
-    pattern = re.compile(r"^\|\s*(Provenance|Evaluation|Release gate) binding\s*\|\s*`([0-9a-f]{64})`\s*\|\s*$")
+    pattern = re.compile(
+        r"^\|\s*(Provenance|Evaluation|Release gate) binding\s*\|\s*`([0-9a-f]{64})`\s*\|\s*$"
+    )
     for line in markdown.splitlines():
         match = pattern.fullmatch(line)
         if match:
@@ -109,14 +111,20 @@ def _gate_payload(gate: Any) -> dict[str, Any]:
             "require_target_free_information_access": policy.require_target_free_information_access,
         },
         "failures": [
-            {"code": failure.code.value, "message": failure.message, "evidence": dict(failure.evidence)}
+            {
+                "code": failure.code.value,
+                "message": failure.message,
+                "evidence": dict(failure.evidence),
+            }
             for failure in gate.failures
         ],
     }
 
 
 def _digest(value: Any) -> str:
-    serialized = json.dumps(_normalize(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    serialized = json.dumps(
+        _normalize(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
     return sha256(serialized.encode("utf-8")).hexdigest()
 
 

@@ -55,7 +55,10 @@ def select_mask_positions(
         count = available.numel()
         if count == 0:
             continue
-        requested = max(config.minimum_masked_tokens, int(torch.ceil(torch.tensor(config.mask_ratio * count)).item()))
+        requested = max(
+            config.minimum_masked_tokens,
+            int(torch.ceil(torch.tensor(config.mask_ratio * count)).item()),
+        )
         requested = min(requested, count)
         if requested == 0:
             continue
@@ -120,7 +123,9 @@ class MaskedNeuralTokenPredictionObjective(nn.Module):
         for level in range(token_ids.shape[-1]):
             logits = token_logits[:, :, level, :]
             ids = token_ids[:, :, level].to(dtype=torch.long)
-            token_loss = F.cross_entropy(logits.flatten(0, 1), ids.flatten(), reduction="none").view_as(weights)
+            token_loss = F.cross_entropy(
+                logits.flatten(0, 1), ids.flatten(), reduction="none"
+            ).view_as(weights)
             per_level.append((token_loss * weights).sum() / denominator)
             health.append(codebook_health(ids, token_logits.shape[-1], selected))
         if per_level:

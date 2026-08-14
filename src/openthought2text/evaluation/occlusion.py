@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
-import math
 from typing import Any
 
 from .audit import assert_target_free_signature
@@ -262,9 +262,13 @@ def _predictions(value: Sequence[str] | str) -> tuple[str, ...]:
     return (value,) if isinstance(value, str) else tuple(str(item) for item in value)
 
 
-def _validate_prediction_count(predictions: Sequence[str], references: Sequence[str], name: str) -> None:
+def _validate_prediction_count(
+    predictions: Sequence[str], references: Sequence[str], name: str
+) -> None:
     if len(predictions) != len(references):
-        raise ValueError(f"{name} produced {len(predictions)} predictions for {len(references)} references")
+        raise ValueError(
+            f"{name} produced {len(predictions)} predictions for {len(references)} references"
+        )
 
 
 def _scores(

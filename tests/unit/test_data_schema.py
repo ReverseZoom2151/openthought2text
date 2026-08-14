@@ -1,3 +1,5 @@
+import pytest
+
 from openthought2text.data import (
     InformationAccess,
     Modality,
@@ -7,15 +9,22 @@ from openthought2text.data import (
     TimeInterval,
 )
 from openthought2text.data.schema import SchemaError
-import pytest
 
 
 def sample(**changes):
     values = dict(
-        sample_id="s-1", dataset_id="zuco", subject_id="sub-1", modality=Modality.EEG,
-        signal=SignalReference("signals/sub-1.npz", "recording-1", 250, 2, channel_names=("Fz", "Cz")),
-        interval=TimeInterval(0.0, 1.0), target=TextTarget("A careful sentence."),
-        split="train", group_ids=("subject:sub-1",), task="reading",
+        sample_id="s-1",
+        dataset_id="zuco",
+        subject_id="sub-1",
+        modality=Modality.EEG,
+        signal=SignalReference(
+            "signals/sub-1.npz", "recording-1", 250, 2, channel_names=("Fz", "Cz")
+        ),
+        interval=TimeInterval(0.0, 1.0),
+        target=TextTarget("A careful sentence."),
+        split="train",
+        group_ids=("subject:sub-1",),
+        task="reading",
     )
     values.update(changes)
     return NeuralTextSample(**values)

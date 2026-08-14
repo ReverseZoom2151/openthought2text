@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
 import math
-from typing import Sequence
+from collections.abc import Sequence
+from dataclasses import dataclass, replace
 
 import torch
 
 from .prepared import TensorBackedSample
 from .schema import TimeInterval
-
 
 SIGNAL_TIMELINE_ALIGNMENT = "signal_timeline_only"
 
@@ -93,7 +92,9 @@ def build_continuous_chunk_view(
             if not source_mask.any():
                 continue
             values = torch.zeros(
-                (row.values.shape[0], duration_samples), dtype=row.values.dtype, device=row.values.device
+                (row.values.shape[0], duration_samples),
+                dtype=row.values.dtype,
+                device=row.values.device,
             )
             chunk_mask = torch.zeros(duration_samples, dtype=torch.bool, device=row.values.device)
             width = stop_index - start_index
@@ -116,12 +117,14 @@ def build_continuous_chunk_view(
                     "chunk_boundary_source": "signal_timestamps",
                 },
             )
-            chunks.append(TensorBackedSample(
-                sample=chunk_sample,
-                values=values,
-                channel_mask=row.resolved_channel_mask,
-                time_mask=chunk_mask,
-            ))
+            chunks.append(
+                TensorBackedSample(
+                    sample=chunk_sample,
+                    values=values,
+                    channel_mask=row.resolved_channel_mask,
+                    time_mask=chunk_mask,
+                )
+            )
     if not chunks:
         raise ValueError("signal timestamps contain no valid samples for continuous chunks")
     return ContinuousChunkView(tuple(chunks), provenance)

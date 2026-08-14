@@ -25,7 +25,9 @@ class SemanticQueryPooler(nn.Module):
     at padded neural positions cannot change the pooled representation.
     """
 
-    def __init__(self, hidden_size: int, num_queries: int = 4, num_heads: int = 4, dropout: float = 0.0) -> None:
+    def __init__(
+        self, hidden_size: int, num_queries: int = 4, num_heads: int = 4, dropout: float = 0.0
+    ) -> None:
         super().__init__()
         if hidden_size < 1 or num_queries < 1 or num_heads < 1 or hidden_size % num_heads:
             raise ValueError("hidden_size must divide by num_heads and queries must be positive")
@@ -33,10 +35,14 @@ class SemanticQueryPooler(nn.Module):
         self.num_queries = num_queries
         self.queries = nn.Parameter(torch.empty(num_queries, hidden_size))
         nn.init.normal_(self.queries, std=hidden_size**-0.5)
-        self.attention = nn.MultiheadAttention(hidden_size, num_heads, dropout=dropout, batch_first=True)
+        self.attention = nn.MultiheadAttention(
+            hidden_size, num_heads, dropout=dropout, batch_first=True
+        )
         self.norm = nn.LayerNorm(hidden_size)
 
-    def forward(self, neural_features: torch.Tensor, neural_mask: torch.Tensor) -> SemanticPoolingOutput:
+    def forward(
+        self, neural_features: torch.Tensor, neural_mask: torch.Tensor
+    ) -> SemanticPoolingOutput:
         if neural_features.ndim != 3 or neural_features.shape[-1] != self.hidden_size:
             raise ValueError("neural_features must be [batch, tokens, hidden_size]")
         if neural_mask.shape != neural_features.shape[:2]:
@@ -108,7 +114,9 @@ class GroupAwareSymmetricInfoNCE(nn.Module):
         false_negative_mask = torch.zeros(batch, batch, dtype=torch.bool, device=logits.device)
         if group_ids is not None:
             same_group = group_ids.reshape(-1, 1).eq(group_ids.reshape(1, -1))
-            false_negative_mask = same_group & ~torch.eye(batch, device=logits.device, dtype=torch.bool)
+            false_negative_mask = same_group & ~torch.eye(
+                batch, device=logits.device, dtype=torch.bool
+            )
             logits = logits.masked_fill(false_negative_mask, -torch.inf)
         targets = torch.arange(batch, device=logits.device)
         neural_to_text = F.cross_entropy(logits, targets)

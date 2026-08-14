@@ -28,16 +28,26 @@ def _hash(character: str) -> str:
 def _provenance() -> RunArtifactProvenance:
     bind = lambda name, char: ArtifactBinding(name, f"artifacts/{name}", _hash(char))
     return RunArtifactProvenance(
-        "run-1", bind("conformer", "a"), bind("checkpoint", "b"), bind("manifest", "c"),
-        bind("split", "d"), bind("config", "e"), "abc123",
-        InformationAccessContract(True, True, False, False, False, False, False, "LOSO", "fixed windows"),
+        "run-1",
+        bind("conformer", "a"),
+        bind("checkpoint", "b"),
+        bind("manifest", "c"),
+        bind("split", "d"),
+        bind("config", "e"),
+        "abc123",
+        InformationAccessContract(
+            True, True, False, False, False, False, False, "LOSO", "fixed windows"
+        ),
     )
 
 
 def _evaluation() -> EvaluationReport:
     return EvaluationReport(
-        "run-1", BenchmarkRowLabel("zuco", "eeg", "reading", "trial", "loso", "open", "greedy"),
-        {"wer": 0.2}, 2, "runs/run-1/predictions.jsonl",
+        "run-1",
+        BenchmarkRowLabel("zuco", "eeg", "reading", "trial", "loso", "open", "greedy"),
+        {"wer": 0.2},
+        2,
+        "runs/run-1/predictions.jsonl",
         tuple(ControlResult(condition, {"wer": 0.5}, 2) for condition in ControlCondition),
         {"wer": GroundingReport(0.2, "noise", 0.5, 0.3, 0.3, False)},
     )
@@ -48,13 +58,19 @@ def _audit() -> GenerationAuditSummary:
 
 
 def _references() -> dict[str, str]:
-    return {"evaluation_report": "runs/run-1/evaluation.json", "provenance_report": "runs/run-1/provenance.json"}
+    return {
+        "evaluation_report": "runs/run-1/evaluation.json",
+        "provenance_report": "runs/run-1/provenance.json",
+    }
 
 
 def test_claimed_model_card_contains_evidence_and_artifact_references(tmp_path) -> None:
     evaluation, provenance = _evaluation(), _provenance()
     gate = assess_release_evidence(
-        evaluation, provenance, generation_audit=_audit(), available_controls=tuple(ControlCondition)
+        evaluation,
+        provenance,
+        generation_audit=_audit(),
+        available_controls=tuple(ControlCondition),
     )
     card = generate_model_card(evaluation, provenance, gate, artifact_references=_references())
     assert card.status is ModelCardStatus.CLAIMED
