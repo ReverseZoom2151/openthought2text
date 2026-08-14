@@ -1,0 +1,9 @@
+{
+  "experiment_name": "zuco_tiny_alignment",
+  "dataset": "zuco_v1",
+  "alignment_access": "word",
+  "subject_protocol": "loso_subject_unique_text",
+  "model": "continuous_conformer_tiny",
+  "seed": 7,
+  "controls": ["full", "shuffled", "zero", "noise", "mask", "length", "timing", "lm_only"]
+}
