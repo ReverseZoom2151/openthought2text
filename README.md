@@ -20,18 +20,23 @@ evidence that arbitrary private thoughts can be decoded.
   auditing for duplicate text/groups, continuous-window overlap, side-channel
   metadata, and declared pretraining overlap.
 - Neural model foundations: continuous neural encoder, timing metadata,
-  coordinate-aware channel merger, subject adapters, and VQ tokenizer health
-  diagnostics.
+  coordinate-aware and graph montage adapters, subject adapters, VQ tokenizer
+  diagnostics, semantic query pooling, contrastive alignment, anchors, CTC,
+  and a target-free autoregressive decoder.
 - Evaluation foundations: CER/WER, retrieval metrics, grounded-gain reporting,
   target-free signature/label-invariance audits, and shuffled/zero/noise/mask/
-  length/timing/surrogate controls.
+  length/timing/surrogate controls, faithfulness suites, paired statistics,
+  channel/time occlusion, saved prediction artifacts, and reports.
+- A synthetic end-to-end workflow: artifact preparation, train-only
+  normalization, masked variable-length batches, supervised training steps,
+  checkpoint provenance, and CLI-based reporting.
 - Project governance, model/dataset-card templates, responsible-use guidance,
   and a research archive that stays outside the distributable package.
 
 ## What still requires execution
 
-Real participant datasets, preprocessing artifacts, model training, trained
-weights, full ZuCo results, cross-subject evaluation, continuous decoding,
+Real participant datasets, real ZuCo preprocessing artifacts, trained weights,
+full ZuCo results, cross-subject evaluation, continuous-decoding performance,
 foundation-model reproduction, and any claims of neural decoding quality remain
 separate from the offline development path. Read the
 [implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md),

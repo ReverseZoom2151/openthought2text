@@ -2,11 +2,17 @@
 
 ## Implemented offline foundations
 
-- Canonical data, manifest, adapter-registry, and split-audit contracts.
-- Continuous encoder, coordinate-aware channel merger, subject adaptation, and
-  vector-quantization diagnostics.
-- Text/retrieval metric primitives, target-free inference audits, and neural
-  grounding control transforms.
+- Canonical data, manifest, adapter-registry, train-only normalization,
+  prepared-artifact, masked variable-length batching, and split-audit contracts.
+- Synthetic end-to-end data preparation/validation and safe discovery contracts
+  for raw-layout and precomputed-feature ZuCo artifacts.
+- Continuous encoder, coordinate-aware and graph montage adapters, subject
+  adaptation, VQ diagnostics, semantic queries, contrastive alignment, anchor,
+  CTC, and target-free sequence-decoder foundations.
+- Text/retrieval metric primitives, target-free inference audits, neural
+  grounding controls, faithfulness suites, bootstrap/permutation statistics,
+  channel/time occlusion, saved predictions, and evaluation reports.
+- Supervised train-step and checkpoint-provenance utilities.
 
 ## Not yet validated experimentally
 
