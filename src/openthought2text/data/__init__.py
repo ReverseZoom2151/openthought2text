@@ -111,6 +111,12 @@ from .augmentation import (
     augment_neural_tensor_batch,
     augment_tensor_backed_samples,
 )
+from .continuous_chunks import (
+    SIGNAL_TIMELINE_ALIGNMENT,
+    ContinuousChunkProvenance,
+    ContinuousChunkView,
+    build_continuous_chunk_view,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -124,6 +130,8 @@ __all__ = [
     "AuthorizedFeatureMapping",
     "Brain2QwertyDiscoveryAdapter",
     "ChannelNormalizer",
+    "ContinuousChunkProvenance",
+    "ContinuousChunkView",
     "DatasetAdapter",
     "DatasetCard",
     "DatasetCardIssue",
@@ -148,6 +156,7 @@ __all__ = [
     "ReleaseBundleAuditReport",
     "ReleaseBundleIssue",
     "SignalReference",
+    "SIGNAL_TIMELINE_ALIGNMENT",
     "SplitPlan",
     "SplitProtocol",
     "SplitValidationReport",
@@ -180,6 +189,7 @@ __all__ = [
     "audit_authorized_json_features",
     "audit_dataset_release_bundle",
     "build_prepared_artifact_manifest",
+    "build_continuous_chunk_view",
     "build_dataset_release_bundle",
     "build_split_plan",
     "collate_tensor_backed_samples",
