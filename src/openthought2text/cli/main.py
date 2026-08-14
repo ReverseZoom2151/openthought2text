@@ -324,8 +324,10 @@ def _run_evaluation(args: argparse.Namespace) -> int:
         _emit({"run_id": report.run_id, "controls": selected,
                "grounding": {name: value.grounded_gain for name, value in report.grounding.items()}})
         return 0
-    print("audit-generation requires an explicitly configured model loader; use the Python audit API.")
-    return 0
+    raise ValueError(
+        "audit-generation cannot load an arbitrary checkpoint; construct a trusted model and use "
+        "the Python target-free audit API"
+    )
 
 
 def _run_report(args: argparse.Namespace) -> int:
