@@ -34,6 +34,7 @@ from .reproduction_card import (
 from .multiseed import MULTISEED_VERSION, MultiSeedAggregate, MultiSeedBenchmarkPlan, SeedExpectation, SeedMetricResult, aggregate_multi_seed
 from .execution_spec import EXECUTION_SPEC_VERSION, TargetFreeEvaluationSpec
 from .operational_evaluation import ControlSuitePlanValidation, FailureCaseExplorerArtifact, build_failure_case_explorer, render_control_suite_plan_markdown, render_failure_case_explorer_markdown, validate_complete_control_suite_plan
+from .clean_environment import CleanEnvironmentAuditPlan, CleanEnvironmentAuditRecord, audit_clean_environment, render_clean_environment_markdown
 
 __all__ = [
     "PROVENANCE_REPORT_VERSION", "ArtifactBinding", "InformationAccessContract", "ModelCardArtifact",
@@ -46,4 +47,5 @@ __all__ = [
     "MULTISEED_VERSION", "MultiSeedAggregate", "MultiSeedBenchmarkPlan", "SeedExpectation", "SeedMetricResult", "aggregate_multi_seed",
     "EXECUTION_SPEC_VERSION", "TargetFreeEvaluationSpec",
     "ControlSuitePlanValidation", "FailureCaseExplorerArtifact", "build_failure_case_explorer", "render_control_suite_plan_markdown", "render_failure_case_explorer_markdown", "validate_complete_control_suite_plan",
+    "CleanEnvironmentAuditPlan", "CleanEnvironmentAuditRecord", "audit_clean_environment", "render_clean_environment_markdown",
 ]
