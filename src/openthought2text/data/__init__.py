@@ -67,6 +67,14 @@ from .json_signals import (
     load_json_tensor_samples,
     select_split_samples,
 )
+from .dataset_card import (
+    DatasetCard,
+    DatasetCardIssue,
+    DatasetCardValidationReport,
+    load_dataset_card,
+    validate_dataset_card,
+    write_dataset_card,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -74,6 +82,9 @@ __all__ = [
     "AuditReport",
     "ChannelNormalizer",
     "DatasetAdapter",
+    "DatasetCard",
+    "DatasetCardIssue",
+    "DatasetCardValidationReport",
     "DatasetManifest",
     "InformationAccess",
     "ManifestSplit",
@@ -112,6 +123,7 @@ __all__ = [
     "fit_train_channel_normalizer",
     "fit_train_text_tokenizer",
     "load_manifest",
+    "load_dataset_card",
     "load_json_tensor_samples",
     "load_prepared_artifact_manifest",
     "load_train_text_tokenizer",
@@ -119,7 +131,9 @@ __all__ = [
     "tokenize_text",
     "select_split_samples",
     "write_manifest",
+    "write_dataset_card",
     "write_prepared_artifact_manifest",
     "write_train_text_tokenizer",
     "validate_split_plan",
+    "validate_dataset_card",
 ]
