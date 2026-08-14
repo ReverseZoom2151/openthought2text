@@ -108,6 +108,13 @@ from .semantic_anchor_decoder import (
     OrderedSemanticAnchorTrainingOutput,
 )
 from .subject import SubjectAdapter, SubjectAdapterMode
+from .text_memory import (
+    FrozenTextEmbeddingInterface,
+    GroupAwareHardNegativeMemoryBank,
+    HardNegativeSample,
+    TextEmbeddingContract,
+    TextEmbeddingProvenance,
+)
 from .tokenizer import (
     CodebookHealth,
     NeuralTokenizerConfig,
@@ -194,6 +201,11 @@ __all__ = [
     "TargetFreeCTCBeamSearch",
     "TORCHSCRIPT_SCOPE_NEURAL_ENCODER_EVIDENCE",
     "TokenTiming",
+    "FrozenTextEmbeddingInterface",
+    "GroupAwareHardNegativeMemoryBank",
+    "HardNegativeSample",
+    "TextEmbeddingContract",
+    "TextEmbeddingProvenance",
     "TorchScriptExportValidation",
     "ValidationFittedScoreWeights",
     "ValidationFittedLanguageScorer",
