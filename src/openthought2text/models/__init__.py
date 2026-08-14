@@ -9,6 +9,13 @@ from .alignment import (
 )
 from .decoder import DecoderGenerationConfig, DecoderTrainingOutput, TargetFreeAutoregressiveDecoder
 from .encoder import ContinuousNeuralEncoder
+from .heads import (
+    CTCProductionHead,
+    CTCProductionOutput,
+    SemanticAnchorHead,
+    SemanticAnchorOutput,
+    greedy_ctc_decode,
+)
 from .subject import SubjectAdapter, SubjectAdapterMode
 from .tokenizer import (
     CodebookHealth,
@@ -24,6 +31,8 @@ __all__ = [
     "ContrastiveAlignmentOutput",
     "ContinuousNeuralEncoder",
     "CoordinateChannelMerger",
+    "CTCProductionHead",
+    "CTCProductionOutput",
     "DecoderGenerationConfig",
     "DecoderTrainingOutput",
     "GroupAwareSymmetricInfoNCE",
@@ -35,7 +44,10 @@ __all__ = [
     "SubjectAdapterMode",
     "SemanticPoolingOutput",
     "SemanticQueryPooler",
+    "SemanticAnchorHead",
+    "SemanticAnchorOutput",
     "TargetFreeAutoregressiveDecoder",
     "TokenTiming",
     "codebook_health",
+    "greedy_ctc_decode",
 ]
