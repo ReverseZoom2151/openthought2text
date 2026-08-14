@@ -24,11 +24,20 @@ from .model_card_validation import (
     compute_model_card_reference_bindings,
     validate_model_card_references,
 )
+from .reproduction_card import (
+    REPRODUCTION_CARD_VERSION,
+    ReproductionProvenanceCard,
+    SourceReference,
+    read_reproduction_card,
+    write_reproduction_card,
+)
 
 __all__ = [
     "PROVENANCE_REPORT_VERSION", "ArtifactBinding", "InformationAccessContract", "ModelCardArtifact",
     "ModelCardError", "ModelCardReferenceBindings", "ModelCardReferenceFailure",
     "ModelCardReferenceFailureCode", "ModelCardReferenceValidation", "ModelCardStatus", "ProvenanceError",
-    "RunArtifactProvenance", "compute_model_card_reference_bindings", "generate_model_card",
-    "read_provenance_report", "validate_model_card_references", "write_model_card", "write_provenance_report",
+    "REPRODUCTION_CARD_VERSION", "ReproductionProvenanceCard", "RunArtifactProvenance", "SourceReference",
+    "compute_model_card_reference_bindings", "generate_model_card", "read_provenance_report",
+    "read_reproduction_card", "validate_model_card_references", "write_model_card", "write_provenance_report",
+    "write_reproduction_card",
 ]
