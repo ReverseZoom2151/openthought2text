@@ -19,6 +19,7 @@ from .alignment import (
     SemanticPoolingOutput,
     SemanticQueryPooler,
 )
+from .adaptation_contracts import LoRAAdapterConfig, LoRAAdapterContract, LoRAProvenance, LoRAScheduleConfig, NeuralFeatureProjector, NeuralProjectorConfig
 from .candidate_ranking import (
     CandidateRankingOutput,
     CandidateRankingTrainingOutput,
@@ -83,6 +84,7 @@ from .self_supervision import (
     NeuralSelfSupervisionConfig,
     NeuralSelfSupervisionOutput,
 )
+from .semantic_anchor_decoder import OrderedSemanticAnchorDecoder, OrderedSemanticAnchorDecoderConfig, OrderedSemanticAnchorGenerationConfig, OrderedSemanticAnchorGenerationOutput, OrderedSemanticAnchorTrainingOutput
 from .subject import SubjectAdapter, SubjectAdapterMode
 from .tokenizer import (
     CodebookHealth,
@@ -179,4 +181,15 @@ __all__ = [
     "NeuralEncoderEvidenceTorchScriptAdapter",
     "validate_neural_encoder_evidence_torchscript",
     "validate_checkpoint_architecture",
+    "LoRAAdapterConfig",
+    "LoRAAdapterContract",
+    "LoRAProvenance",
+    "LoRAScheduleConfig",
+    "NeuralFeatureProjector",
+    "NeuralProjectorConfig",
+    "OrderedSemanticAnchorDecoder",
+    "OrderedSemanticAnchorDecoderConfig",
+    "OrderedSemanticAnchorGenerationConfig",
+    "OrderedSemanticAnchorGenerationOutput",
+    "OrderedSemanticAnchorTrainingOutput",
 ]
