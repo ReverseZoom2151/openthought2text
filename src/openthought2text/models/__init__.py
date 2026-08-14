@@ -17,6 +17,7 @@ from .heads import (
     greedy_ctc_decode,
 )
 from .model import NeuralToTextGenerationOutput, NeuralToTextModel, NeuralToTextTrainingOutput
+from .montage import GraphMontageAdapter
 from .subject import SubjectAdapter, SubjectAdapterMode
 from .tokenizer import (
     CodebookHealth,
@@ -37,6 +38,7 @@ __all__ = [
     "DecoderGenerationConfig",
     "DecoderTrainingOutput",
     "GroupAwareSymmetricInfoNCE",
+    "GraphMontageAdapter",
     "NeuralEncoderOutput",
     "NeuralTokenizerConfig",
     "NeuralTokenizerOutput",
