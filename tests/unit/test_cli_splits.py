@@ -69,7 +69,7 @@ def test_cli_synthetic_training_writes_run_artifacts_and_refuses_overwrite(tmp_p
     output = tmp_path / "run"
     assert main(["train", "synthetic", "--root", str(root), "--output", str(output)]) == 0
     assert {path.name for path in output.iterdir()} == {
-        "checkpoint.pt", "normalizer.json", "predictions.jsonl", "tokenizer.json"
+        "checkpoint.pt", "normalizer.json", "predictions.jsonl", "run_manifest.json", "tokenizer.json"
     }
     with pytest.raises(SystemExit) as error:
         main(["train", "synthetic", "--root", str(root), "--output", str(output)])

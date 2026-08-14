@@ -238,15 +238,19 @@ def _run_synthetic_training(args: argparse.Namespace) -> int:
     (args.output / "tokenizer.json").write_text(json.dumps(inputs.tokenizer.to_dict(), sort_keys=True) + "\n", encoding="utf-8")
     (args.output / "normalizer.json").write_text(json.dumps(inputs.normalizer.to_dict(), sort_keys=True) + "\n", encoding="utf-8")
     run_id = f"synthetic-seed-{args.seed}"
+    run_manifest = RunManifest(
+        experiment_name=run_id, dataset_artifact_checksum=_sha256_file(manifest_path),
+        split_manifest_checksum=_sha256_file(manifest_path), seed=args.seed,
+        resolved_config={"model": asdict(config), "tokenizer_checksum": inputs.tokenizer.checksum,
+                         "normalizer_checksum": inputs.normalizer.checksum},
+    )
+    (args.output / "run_manifest.json").write_text(
+        json.dumps(run_manifest.to_dict(), sort_keys=True, indent=2) + "\n", encoding="utf-8"
+    )
     checkpoint = args.output / "checkpoint.pt"
     save_checkpoint(checkpoint, model=model, optimizer=optimizer, metadata=CheckpointMetadata(
         epoch=args.epochs, step=len(steps), selection_metric="synthetic_train_loss",
-        selection_value=steps[-1].loss, run_manifest=RunManifest(
-            experiment_name=run_id, dataset_artifact_checksum=_sha256_file(manifest_path),
-            split_manifest_checksum=_sha256_file(manifest_path), seed=args.seed,
-            resolved_config={"model": asdict(config), "tokenizer_checksum": inputs.tokenizer.checksum,
-                             "normalizer_checksum": inputs.normalizer.checksum},
-        ),
+        selection_value=steps[-1].loss, run_manifest=run_manifest,
     ))
     batch = collate_tensor_backed_samples(test_rows)
     model.eval()
