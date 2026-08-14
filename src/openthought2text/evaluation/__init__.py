@@ -49,6 +49,15 @@ from .token_predictions import (
     generate_target_free_prediction_records,
     token_ids_to_prediction_records,
 )
+from .benchmark_table import (
+    BENCHMARK_TABLE_VERSION,
+    BenchmarkProvenanceReferences,
+    BenchmarkTableArtifact,
+    BenchmarkTableRow,
+    MetricUncertainty,
+    render_benchmark_csv,
+    render_benchmark_markdown,
+)
 from .metrics import (
     ErrorRate,
     RetrievalMetrics,
@@ -84,13 +93,14 @@ from .statistics import (
 )
 
 __all__ = [
-    "BenchmarkRowLabel", "BootstrapInterval", "ControlAggregate", "ControlResult",
+    "BENCHMARK_TABLE_VERSION", "BenchmarkProvenanceReferences", "BenchmarkRowLabel",
+    "BenchmarkTableArtifact", "BenchmarkTableRow", "BootstrapInterval", "ControlAggregate", "ControlResult",
     "DEFAULT_SIGNAL_CONTROLS",
     "EVALUATION_REPORT_VERSION",
     "EditOperations", "ErrorRate", "EvaluationReport", "FaithfulnessConditionResult",
     "FaithfulnessSuiteResult",
     "GateFailure", "GateFailureCode", "GenerationAuditSummary", "GroundingReport",
-    "LabelInvarianceResult", "MetricSpec",
+    "LabelInvarianceResult", "MetricSpec", "MetricUncertainty",
     "OcclusionMetadata", "OcclusionMode", "OcclusionResult", "OcclusionSuiteResult", "OcclusionVariant",
     "PREDICTION_RECORD_VERSION", "PairedPermutationResult", "PredictionRecord", "RetrievalInputs",
     "ReleaseGatePolicy", "ReleaseGateResult", "RetrievalMetrics", "TextErrorCategory",
@@ -106,6 +116,7 @@ __all__ = [
     "run_faithfulness_suite", "run_occlusion_suite",
     "read_evaluation_report", "read_prediction_jsonl", "retrieval_metrics",
     "retrieval_ranks", "stimulus_bootstrap_ci", "subject_bootstrap_ci", "word_error_rate",
-    "token_ids_to_prediction_records", "word_edit_operations", "write_evaluation_report",
+    "render_benchmark_csv", "render_benchmark_markdown", "token_ids_to_prediction_records",
+    "word_edit_operations", "write_evaluation_report",
     "write_prediction_jsonl",
 ]
