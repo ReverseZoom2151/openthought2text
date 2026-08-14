@@ -13,3 +13,5 @@ runs/
 artifacts/
 data/
 wandb/
+!src/openthought2text/data/
+!src/openthought2text/data/**
