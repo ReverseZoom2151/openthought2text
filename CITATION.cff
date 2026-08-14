@@ -1,0 +1,7 @@
+cff-version: 1.2.0
+message: "If you use OpenThought2Text, please cite the project repository and its release DOI when available."
+title: "OpenThought2Text"
+type: software
+license: Apache-2.0
+version: 0.0.1
+repository-code: "https://github.com/ReverseZoom2151/openthought2text"

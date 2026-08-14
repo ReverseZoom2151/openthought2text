@@ -1,30 +1,109 @@
-# OpenThought2Text
+<h1 align="center">OpenThought2Text</h1>
 
-OpenThought2Text is an open research framework for **constrained neural-activity-to-text decoding**. It supports recorded EEG, MEG, and intracortical language-task signals while treating evaluation validity, neural grounding, and participant privacy as first-class requirements.
+<p align="center"><strong>Evidence-audited neural activity to text research framework</strong></p>
 
-It does not claim to decode arbitrary private thoughts or internal monologue.
+An in-progress, test-driven research implementation for decoding text associated
+with constrained recorded language tasks. OpenThought2Text is building a
+reproducible EEG/MEG/intracortical research pipeline around leakage-safe data
+contracts, neural representations, target-free decoding, and explicit evidence
+controls.
 
-## Project principles
+It is not a demonstration of unrestricted mind reading: this repository
+contains no trained checkpoints, benchmark claims, clinical capability, or
+evidence that arbitrary private thoughts can be decoded.
 
-- Every result names its modality, paradigm, alignment regime, subject protocol, text constraint, and decoding mode.
-- Teacher-forced logits are training diagnostics, never headline generation results.
-- Inference paths are target-free; tests verify that changing labels cannot change a prediction.
-- Full-signal results are compared with shuffled, zero, noise, mask-only, length-only, timing-only, and language-prior controls.
-- Reference research is preserved outside the package under [`../references/`](../references/); implementation is clean-room unless license terms explicitly allow reuse.
+## What is implemented
 
-## Status
+- A clean-room, Apache-2.0 Python package with a command-line foundation,
+  reproducibility manifest, composable losses, synthetic workflow, and CI.
+- Canonical neural-text samples, dataset manifests, adapter registry, and split
+  auditing for duplicate text/groups, continuous-window overlap, side-channel
+  metadata, and declared pretraining overlap.
+- Neural model foundations: continuous neural encoder, timing metadata,
+  coordinate-aware channel merger, subject adapters, and VQ tokenizer health
+  diagnostics.
+- Evaluation foundations: CER/WER, retrieval metrics, grounded-gain reporting,
+  target-free signature/label-invariance audits, and shuffled/zero/noise/mask/
+  length/timing/surrogate controls.
+- Project governance, model/dataset-card templates, responsible-use guidance,
+  and a research archive that stays outside the distributable package.
 
-The project is in the implementation phase. The governing roadmap is the [workspace master plan](../THOUGHT_TO_TEXT_MASTER_PLAN.md). The first build target is a reproducible ZuCo reading-EEG benchmark with explicit word-aligned and continuous/fixation-free tracks.
+## What still requires execution
 
-## Quick start
+Real participant datasets, preprocessing artifacts, model training, trained
+weights, full ZuCo results, cross-subject evaluation, continuous decoding,
+foundation-model reproduction, and any claims of neural decoding quality remain
+separate from the offline development path. Read the
+[implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md),
+[capability status](docs/CAPABILITIES.md), and
+[paper-fidelity status](docs/PAPER_FIDELITY.md) before spending compute.
+
+## Install
 
 ```bash
+git clone https://github.com/ReverseZoom2151/openthought2text.git
 cd openthought2text
+
+# Offline development and contract checks
 python -m pip install -e '.[dev]'
-ott --help
-pytest
+python -m pytest -q
+
+# Install a matching CPU/CUDA PyTorch build before real training.
 ```
 
-## Safety and scope
+Python 3.10–3.12 is supported. The default test path uses synthetic data only;
+participant datasets and runtime-heavy research dependencies are deliberately
+not bundled.
 
-Outputs are experimental task-associated decodes, not ground truth mental content. Do not use this project for clinical, forensic, employment, educational, surveillance, or high-stakes decision-making purposes.
+## Core workflow
+
+```text
+recorded neural signal
+  → validated dataset artifact and information-access manifest
+  → leakage-safe subject/stimulus/recording split
+  → modality-aware neural encoder and semantic representation
+  → target-free decoder or candidate-evidence scorer
+  → controls, saved predictions, and reproducible report
+```
+
+Useful commands:
+
+```bash
+# Dataset and split entry points
+ott data discover --dataset zuco_v1 --root /path/to/zuco
+ott data validate --dataset zuco_v1 --root /path/to/zuco
+ott splits audit --artifact /path/to/artifact --protocol loso_subject_unique_text
+
+# Generation and grounding audits
+ott evaluate audit-generation --checkpoint /path/to/checkpoint
+ott evaluate compare-controls --run /path/to/run \
+  --controls full,shuffled,zero,noise,mask,length,timing,lm_only
+
+# Synthetic package smoke path
+python examples/synthetic_workflow.py
+```
+
+## Documentation
+
+- [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
+- [Capability status](docs/CAPABILITIES.md)
+- [Paper-fidelity status](docs/PAPER_FIDELITY.md)
+- [Data format and information-access contract](docs/DATA_FORMAT.md)
+- [Reproducibility](docs/REPRODUCIBILITY.md) and [dependency policy](docs/DEPENDENCY_POLICY.md)
+- [Architecture](docs/architecture/README.md), [scope](docs/ethics/scope.md), and
+  [workspace layout](docs/WORKSPACE_LAYOUT.md)
+
+## Contributing
+
+Run `python -m pytest -q` before submitting changes. Keep claims tied to saved,
+versioned artifacts; keep generation target-free; and update capability,
+paper-fidelity, model-card, and dataset-card records whenever a research path
+changes status.
+
+## License and citation
+
+Released under the [Apache-2.0 License](LICENSE). This repository is an
+independent implementation informed by the research cited in the documentation;
+reference code and papers are not redistributed as part of this package.
+
+See [CITATION.cff](CITATION.cff) for software citation metadata.
