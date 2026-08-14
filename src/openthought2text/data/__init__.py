@@ -75,11 +75,21 @@ from .dataset_card import (
     validate_dataset_card,
     write_dataset_card,
 )
+from .task_adapters import (
+    Brain2QwertyDiscoveryAdapter,
+    LabelAccess,
+    T15DiscoveryAdapter,
+    TaskAdapterRequirements,
+    TaskDiscoveryIssue,
+    TaskDiscoveryReport,
+    TypedTaskDiscoveryAdapter,
+)
 
 __all__ = [
     "AdapterRegistry",
     "AuditFinding",
     "AuditReport",
+    "Brain2QwertyDiscoveryAdapter",
     "ChannelNormalizer",
     "DatasetAdapter",
     "DatasetCard",
@@ -87,6 +97,7 @@ __all__ = [
     "DatasetCardValidationReport",
     "DatasetManifest",
     "InformationAccess",
+    "LabelAccess",
     "ManifestSplit",
     "Modality",
     "NeuralTextSample",
@@ -104,7 +115,12 @@ __all__ = [
     "SyntheticNeuralTextAdapter",
     "SyntheticValidationReport",
     "TensorBackedSample",
+    "T15DiscoveryAdapter",
+    "TaskAdapterRequirements",
+    "TaskDiscoveryIssue",
+    "TaskDiscoveryReport",
     "TrainTextTokenizer",
+    "TypedTaskDiscoveryAdapter",
     "UnknownTokenPolicy",
     "VariableLengthTensorDataset",
     "ZuCoDiscoveryAdapter",
