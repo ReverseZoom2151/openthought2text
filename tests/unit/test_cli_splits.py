@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -74,3 +75,11 @@ def test_cli_synthetic_training_writes_run_artifacts_and_refuses_overwrite(tmp_p
     with pytest.raises(SystemExit) as error:
         main(["train", "synthetic", "--root", str(root), "--output", str(output)])
     assert error.value.code == 2
+
+
+def test_cli_dataset_card_validation(tmp_path) -> None:
+    valid = Path(__file__).resolve().parents[2] / "dataset_cards" / "synthetic.json"
+    assert main(["data", "card-validate", "--card", str(valid)]) == 0
+    invalid = tmp_path / "bad.json"
+    invalid.write_text("{}", encoding="utf-8")
+    assert main(["data", "card-validate", "--card", str(invalid)]) == 1
