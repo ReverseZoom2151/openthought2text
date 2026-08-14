@@ -16,6 +16,7 @@ from .schema import (
     TextTarget,
     TimeInterval,
 )
+from .synthetic import SyntheticNeuralTextAdapter, SyntheticValidationReport
 
 __all__ = [
     "AdapterRegistry",
@@ -30,6 +31,8 @@ __all__ = [
     "SignalReference",
     "TextTarget",
     "TimeInterval",
+    "SyntheticNeuralTextAdapter",
+    "SyntheticValidationReport",
     "audit_splits",
     "load_manifest",
     "write_manifest",
