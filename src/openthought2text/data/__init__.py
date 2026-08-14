@@ -140,6 +140,19 @@ from .preflight import (
     build_authorized_preflight_plan,
     write_authorized_preflight_plan,
 )
+from .zuco_raw_plan import (
+    ZUCO_RAW_PLAN_KIND,
+    ZUCO_RAW_PLAN_VERSION,
+    AuthorizedZuCoReader,
+    ZuCoConversionRecord,
+    ZuCoDataQualityIssue,
+    ZuCoDataQualityReport,
+    ZuCoDataQualitySeverity,
+    ZuCoRawConversionPlan,
+    plan_authorized_zuco_raw_conversion,
+    validate_zuco_alignment_records,
+    write_zuco_raw_conversion_plan,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -151,6 +164,7 @@ __all__ = [
     "ArtifactAuditReport",
     "AuthorizedFeatureArtifact",
     "AuthorizedFeatureMapping",
+    "AuthorizedZuCoReader",
     "AuthorizedDatasetPreflightPlan",
     "Brain2QwertyDiscoveryAdapter",
     "ChannelNormalizer",
@@ -210,6 +224,10 @@ __all__ = [
     "UnknownTokenPolicy",
     "VariableLengthTensorDataset",
     "ZuCoDiscoveryAdapter",
+    "ZuCoConversionRecord",
+    "ZuCoDataQualityIssue",
+    "ZuCoDataQualityReport",
+    "ZuCoDataQualitySeverity",
     "ZuCoDiscoveryReport",
     "ZuCoFeatureArtifactReport",
     "ZuCoFeatureIssue",
@@ -217,6 +235,7 @@ __all__ = [
     "ZuCoLayoutIssue",
     "ZuCoLayoutSeverity",
     "ZuCoPrecomputedFeatureAdapter",
+    "ZuCoRawConversionPlan",
     "ZuCoTaskInventory",
     "audit_splits",
     "augment_neural_tensor_batch",
@@ -243,6 +262,7 @@ __all__ = [
     "select_split_samples",
     "select_named_montage",
     "patch_tensor_backed_sample",
+    "plan_authorized_zuco_raw_conversion",
     "sensor_layout_to_tensor",
     "write_manifest",
     "write_dataset_card",
@@ -252,4 +272,8 @@ __all__ = [
     "write_train_text_tokenizer",
     "validate_split_plan",
     "validate_dataset_card",
+    "validate_zuco_alignment_records",
+    "write_zuco_raw_conversion_plan",
+    "ZUCO_RAW_PLAN_KIND",
+    "ZUCO_RAW_PLAN_VERSION",
 ]
