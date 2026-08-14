@@ -8,6 +8,7 @@ from .alignment import (
     SemanticQueryPooler,
 )
 from .candidate_ranking import CandidateRankingOutput, EvidenceGroundedCandidateRanker
+from .bottleneck import NeuralRepresentationBottleneck, NeuralRepresentationBottleneckOutput
 from .decoder import DecoderGenerationConfig, DecoderTrainingOutput, TargetFreeAutoregressiveDecoder
 from .encoder import ContinuousNeuralEncoder
 from .heads import (
@@ -53,6 +54,8 @@ __all__ = [
     "NeuralToTextGenerationOutput",
     "NeuralToTextModel",
     "NeuralToTextTrainingOutput",
+    "NeuralRepresentationBottleneck",
+    "NeuralRepresentationBottleneckOutput",
     "NeuralVectorQuantizer",
     "ResidualVectorQuantizer",
     "ResidualVectorQuantizerConfig",
