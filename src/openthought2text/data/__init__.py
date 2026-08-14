@@ -54,6 +54,14 @@ from .splits import (
     build_split_plan,
     validate_split_plan,
 )
+from .tokenizer import (
+    TrainTextTokenizer,
+    UnknownTokenPolicy,
+    fit_train_text_tokenizer,
+    load_train_text_tokenizer,
+    tokenize_text,
+    write_train_text_tokenizer,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -79,6 +87,8 @@ __all__ = [
     "SyntheticNeuralTextAdapter",
     "SyntheticValidationReport",
     "TensorBackedSample",
+    "TrainTextTokenizer",
+    "UnknownTokenPolicy",
     "VariableLengthTensorDataset",
     "ZuCoDiscoveryAdapter",
     "ZuCoDiscoveryReport",
@@ -94,10 +104,14 @@ __all__ = [
     "build_split_plan",
     "collate_tensor_backed_samples",
     "fit_train_channel_normalizer",
+    "fit_train_text_tokenizer",
     "load_manifest",
     "load_prepared_artifact_manifest",
+    "load_train_text_tokenizer",
     "tensor_checksum",
+    "tokenize_text",
     "write_manifest",
     "write_prepared_artifact_manifest",
+    "write_train_text_tokenizer",
     "validate_split_plan",
 ]
