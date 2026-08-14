@@ -37,6 +37,10 @@ def shuffle_batch(signal: Any, *, seed: int = 0, permutation: Sequence[int] | No
     if permutation is None:
         permutation = list(range(batch_size))
         random.Random(seed).shuffle(permutation)
+        # An identity permutation is not a shuffled-neural control.  This matters
+        # most for tiny batches, where it is surprisingly likely.
+        if batch_size > 1 and list(permutation) == list(range(batch_size)):
+            permutation = [*range(1, batch_size), 0]
     if sorted(permutation) != list(range(batch_size)):
         raise ValueError("permutation must contain each batch index exactly once")
     module = type(signal).__module__

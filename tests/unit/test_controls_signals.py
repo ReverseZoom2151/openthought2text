@@ -15,6 +15,7 @@ def test_zero_and_shuffled_controls_preserve_shape() -> None:
     signal = [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]
     assert zero_signal(signal) == [[[0.0, 0.0]], [[0.0, 0.0]], [[0.0, 0.0]]]
     assert shuffle_batch(signal, permutation=[2, 0, 1]) == [signal[2], signal[0], signal[1]]
+    assert shuffle_batch(signal, seed=9) != signal
 
 
 def test_noise_and_surrogate_are_seeded_and_distribution_preserving() -> None:
