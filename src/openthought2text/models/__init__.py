@@ -1,6 +1,13 @@
 """Dependency-light model primitives for OpenThought2Text."""
 
 from .channels import CoordinateChannelMerger
+from .ctc_beam_search import (
+    CTCBeamHypothesis,
+    CTCBeamSearchConfig,
+    CTCBeamSearchOutput,
+    TargetFreeCTCBeamSearch,
+    ValidationFittedLanguageScorer,
+)
 from .checkpoint import (
     CheckpointArchitectureCompatibility,
     checkpoint_architecture_metadata,
@@ -107,6 +114,9 @@ __all__ = [
     "CoordinateChannelMerger",
     "CTCProductionHead",
     "CTCProductionOutput",
+    "CTCBeamHypothesis",
+    "CTCBeamSearchConfig",
+    "CTCBeamSearchOutput",
     "DecoderGenerationConfig",
     "DecoderTrainingOutput",
     "EvidenceGroundedCandidateRanker",
@@ -150,10 +160,12 @@ __all__ = [
     "SemanticAnchorHead",
     "SemanticAnchorOutput",
     "TargetFreeAutoregressiveDecoder",
+    "TargetFreeCTCBeamSearch",
     "TORCHSCRIPT_SCOPE_NEURAL_ENCODER_EVIDENCE",
     "TokenTiming",
     "TorchScriptExportValidation",
     "ValidationFittedScoreWeights",
+    "ValidationFittedLanguageScorer",
     "architecture_fingerprint",
     "build_neural_to_text_model",
     "codebook_health",
