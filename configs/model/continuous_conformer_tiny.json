@@ -1,11 +1,14 @@
 {
-  "name": "continuous_conformer_tiny",
-  "input_channels": 2,
-  "model_dim": 64,
-  "num_layers": 2,
-  "num_heads": 4,
+  "hidden_size": 64,
+  "temporal_kernel": 9,
+  "encoder_layers": 2,
+  "encoder_heads": 4,
+  "decoder_layers": 2,
+  "decoder_heads": 4,
   "stride_samples": 10,
-  "semantic_queries": 4,
-  "decoder_vocab_size": 64,
-  "decoder_max_length": 32
+  "coordinate_size": 3,
+  "vocabulary_size": 64,
+  "max_sequence_length": 32,
+  "bos_token_id": 0,
+  "pad_token_id": 0
 }

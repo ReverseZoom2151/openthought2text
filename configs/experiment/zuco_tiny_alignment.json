@@ -1,9 +1,11 @@
 {
   "experiment_name": "zuco_tiny_alignment",
-  "dataset": "zuco_v1",
+  "dataset": "zuco_discovery",
+  "status": "preflight_required_no_participant_data_in_repository",
   "alignment_access": "word",
   "subject_protocol": "loso_subject_unique_text",
-  "model": "continuous_conformer_tiny",
+  "model": "neural_to_text_tiny",
+  "model_config": "configs/model/continuous_conformer_tiny.json",
   "seed": 7,
   "controls": ["full", "shuffled", "zero", "noise", "mask", "length", "timing", "lm_only"]
 }
