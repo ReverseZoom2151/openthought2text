@@ -103,6 +103,7 @@ ott train synthetic --root /tmp/ott-synthetic --output /tmp/ott-synthetic-run
 - [Capability status](docs/CAPABILITIES.md)
 - [Paper-fidelity status](docs/PAPER_FIDELITY.md)
 - [Data format and information-access contract](docs/DATA_FORMAT.md)
+- [Synthetic dataset card](dataset_cards/synthetic.json)
 - [Configuration](docs/CONFIGURATION.md)
 - [Reproducibility](docs/REPRODUCIBILITY.md) and [dependency policy](docs/DEPENDENCY_POLICY.md)
 - [Architecture](docs/architecture/README.md), [scope](docs/ethics/scope.md), and
