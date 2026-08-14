@@ -19,6 +19,8 @@ from typing import Any
 
 from openthought2text.controls import ControlCondition
 
+from .grounding import GroundingReport
+
 
 PREDICTION_RECORD_VERSION = "1.0"
 EVALUATION_REPORT_VERSION = "1.0"
@@ -226,6 +228,7 @@ class EvaluationReport:
     prediction_count: int
     prediction_artifact: str
     control_results: tuple[ControlResult, ...] = ()
+    grounding: Mapping[str, GroundingReport] = field(default_factory=dict)
     metadata: Mapping[str, Any] = field(default_factory=dict)
     schema_version: str = EVALUATION_REPORT_VERSION
 
@@ -237,6 +240,7 @@ class EvaluationReport:
             raise ValueError("prediction_count must be non-negative")
         object.__setattr__(self, "metrics", _finite_scores(self.metrics, "metrics"))
         object.__setattr__(self, "control_results", tuple(self.control_results))
+        object.__setattr__(self, "grounding", dict(self.grounding))
         try:
             json.dumps(dict(self.metadata), sort_keys=True)
         except (TypeError, ValueError) as error:
@@ -257,6 +261,17 @@ class EvaluationReport:
             "prediction_artifact": self.prediction_artifact,
             "control_results": [item.to_dict() for item in self.control_results],
             "control_aggregates": [item.to_dict() for item in self.control_aggregates],
+            "grounding": {
+                metric: {
+                    "full_score": report.full_score,
+                    "strongest_control": report.strongest_control,
+                    "strongest_control_score": report.strongest_control_score,
+                    "neural_contribution": report.neural_contribution,
+                    "grounded_gain": report.grounded_gain,
+                    "higher_is_better": report.higher_is_better,
+                }
+                for metric, report in self.grounding.items()
+            },
             "metadata": dict(self.metadata),
         }
 
@@ -269,6 +284,10 @@ class EvaluationReport:
             prediction_count=int(data["prediction_count"]),
             prediction_artifact=str(data["prediction_artifact"]),
             control_results=tuple(ControlResult.from_dict(item) for item in data.get("control_results", ())),
+            grounding={
+                str(metric): GroundingReport(**values)
+                for metric, values in data.get("grounding", {}).items()
+            },
             metadata=data.get("metadata", {}),
             schema_version=str(data.get("schema_version", EVALUATION_REPORT_VERSION)),
         )

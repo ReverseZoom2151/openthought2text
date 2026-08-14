@@ -16,6 +16,7 @@ from .faithfulness import (
     MetricSpec,
     run_faithfulness_suite,
 )
+from .evaluator import RetrievalInputs, evaluate_saved_predictions
 from .metrics import (
     ErrorRate,
     RetrievalMetrics,
@@ -56,12 +57,14 @@ __all__ = [
     "EVALUATION_REPORT_VERSION",
     "ErrorRate", "EvaluationReport", "FaithfulnessConditionResult", "FaithfulnessSuiteResult",
     "GenerationAuditSummary", "GroundingReport", "LabelInvarianceResult", "MetricSpec",
-    "PREDICTION_RECORD_VERSION", "PairedPermutationResult", "PredictionRecord", "RetrievalMetrics",
+    "PREDICTION_RECORD_VERSION", "PairedPermutationResult", "PredictionRecord", "RetrievalInputs",
+    "RetrievalMetrics",
     "aggregate_control_results",
     "assert_label_invariance", "assert_target_free_signature", "audit_label_invariance",
     "build_grounding_report", "character_error_rate", "corpus_character_error_rate",
     "corpus_word_error_rate", "edit_distance", "forbidden_generation_parameters",
-    "cluster_bootstrap_ci", "grounded_gain", "paired_permutation_test", "run_faithfulness_suite",
+    "cluster_bootstrap_ci", "evaluate_saved_predictions", "grounded_gain", "paired_permutation_test",
+    "run_faithfulness_suite",
     "read_evaluation_report", "read_prediction_jsonl", "retrieval_metrics",
     "retrieval_ranks", "stimulus_bootstrap_ci", "subject_bootstrap_ci", "word_error_rate",
     "write_evaluation_report", "write_prediction_jsonl",
