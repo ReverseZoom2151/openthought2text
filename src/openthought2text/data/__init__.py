@@ -27,6 +27,13 @@ from .batching import (
     VariableLengthTensorDataset,
     collate_tensor_backed_samples,
 )
+from .canonical_conversion import (
+    CanonicalConversionArtifact,
+    build_brain2qwerty_canonical_artifact,
+    build_canonical_conversion_artifact,
+    build_t15_canonical_artifact,
+    build_zuco_canonical_artifact,
+)
 from .continuous_chunks import (
     SIGNAL_TIMELINE_ALIGNMENT,
     ContinuousChunkProvenance,
@@ -199,6 +206,7 @@ __all__ = [
     "Brain2QwertyConversionPlan",
     "Brain2QwertyWindowConfig",
     "ChannelNormalizer",
+    "CanonicalConversionArtifact",
     "CanonicalPreprocessingArtifact",
     "ContinuousChunkProvenance",
     "ContinuousChunkView",
@@ -286,8 +294,12 @@ __all__ = [
     "audit_dataset_release_bundle",
     "audit_authorized_preflight_plan",
     "build_prepared_artifact_manifest",
+    "build_brain2qwerty_canonical_artifact",
+    "build_canonical_conversion_artifact",
     "build_continuous_chunk_view",
     "build_dataset_release_bundle",
+    "build_t15_canonical_artifact",
+    "build_zuco_canonical_artifact",
     "build_authorized_preflight_plan",
     "build_split_plan",
     "collate_tensor_backed_samples",
