@@ -21,12 +21,15 @@ deliverable.
 The offline foundation is implemented and exercised on a deterministic,
 non-participant synthetic artifact: manifest validation, portable signal
 loading, leakage-aware split construction, train-only normalization and text
-vocabulary fitting, a supervised epoch, target-free generation, prediction
-serialization, checkpoint/provenance records, and evidence gating.
+vocabulary fitting, fixed-duration continuous views, baseline/encoder families,
+self-supervision and discrete-token interfaces, target-free generation and CTC
+beam search, prediction serialization, checkpoint/provenance records,
+factorized evidence scoring, and evidence gating.
 
 The next research milestone is deliberately not “train a bigger model.” It is
-to prepare an authorized real-data artifact with a dataset card, a derived
-held-out-subject/unique-text split plan, an explicit information-access
-contract, and saved full/control predictions. Only then can a model-card claim
-become supported by the release gate. Until those artifacts exist, no real
-dataset result or neural-decoding quality claim is implemented.
+to prepare an authorized real-data artifact with a dataset card, release bundle,
+authorized preflight plan, a derived held-out-subject/unique-text split plan,
+an explicit information-access contract, target-free execution specification,
+and saved full/control predictions. Only then can a model-card claim become
+supported by the release gate. Until those artifacts exist, no real dataset
+result or neural-decoding quality claim is implemented.
