@@ -18,6 +18,11 @@ from .heads import (
 )
 from .model import NeuralToTextGenerationOutput, NeuralToTextModel, NeuralToTextTrainingOutput
 from .montage import GraphMontageAdapter
+from .residual_quantizer import (
+    ResidualVectorQuantizer,
+    ResidualVectorQuantizerConfig,
+    ResidualVectorQuantizerOutput,
+)
 from .subject import SubjectAdapter, SubjectAdapterMode
 from .tokenizer import (
     CodebookHealth,
@@ -46,6 +51,9 @@ __all__ = [
     "NeuralToTextModel",
     "NeuralToTextTrainingOutput",
     "NeuralVectorQuantizer",
+    "ResidualVectorQuantizer",
+    "ResidualVectorQuantizerConfig",
+    "ResidualVectorQuantizerOutput",
     "SubjectAdapter",
     "SubjectAdapterMode",
     "SemanticPoolingOutput",
