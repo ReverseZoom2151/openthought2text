@@ -54,6 +54,13 @@ from .reproduction_card import (
     read_reproduction_card,
     write_reproduction_card,
 )
+from .visualizations import (
+    VisualizationFragment,
+    render_control_leaderboard,
+    render_data_quality_summary,
+    render_failure_case_gallery,
+    render_subject_benchmark_table,
+)
 
 __all__ = [
     "PROVENANCE_REPORT_VERSION",
@@ -97,4 +104,9 @@ __all__ = [
     "CleanEnvironmentAuditRecord",
     "audit_clean_environment",
     "render_clean_environment_markdown",
+    "VisualizationFragment",
+    "render_control_leaderboard",
+    "render_data_quality_summary",
+    "render_failure_case_gallery",
+    "render_subject_benchmark_table",
 ]

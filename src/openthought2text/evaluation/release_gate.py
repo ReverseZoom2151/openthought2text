@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Any
 
 from openthought2text.controls import ControlCondition
-from openthought2text.reporting import RunArtifactProvenance
+from openthought2text.reporting.provenance import RunArtifactProvenance
 
 from .faithfulness import GenerationAuditSummary
 from .records import EvaluationReport
