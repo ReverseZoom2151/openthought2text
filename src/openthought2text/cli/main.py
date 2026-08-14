@@ -12,6 +12,7 @@ import torch
 
 from openthought2text.data import (
     AdapterRegistry,
+    audit_authorized_preflight_plan,
     DatasetManifest,
     validate_dataset_card,
     SplitProtocol,
@@ -61,6 +62,10 @@ def build_parser() -> argparse.ArgumentParser:
         command.add_argument("--root", type=_path, required=True)
     card = data_subparsers.add_parser("card-validate", help="Validate a checksummed dataset card")
     card.add_argument("--card", type=_path, required=True)
+    preflight = data_subparsers.add_parser(
+        "preflight-audit", help="Audit authorized metadata bindings without loading participant signals"
+    )
+    preflight.add_argument("--plan", type=_path, required=True)
 
     splits = subparsers.add_parser("splits", help="Split audits")
     splits_subparsers = splits.add_subparsers(dest="splits_command", required=True)
@@ -124,6 +129,17 @@ def _run_data(args: argparse.Namespace) -> int:
         report = validate_dataset_card(args.card)
         _emit({"passed": report.passed, "card": None if report.card is None else report.card.to_dict(),
                "issues": [{"code": item.code, "message": item.message} for item in report.issues]})
+        return 0 if report.passed else 1
+    if args.data_command == "preflight-audit":
+        report = audit_authorized_preflight_plan(args.plan)
+        _emit(
+            {
+                "passed": report.passed,
+                "dataset_id": None if report.plan is None else report.plan.dataset_id,
+                "requested_protocols": [] if report.plan is None else [item.value for item in report.plan.requested_protocols],
+                "issues": [{"code": item.code, "message": item.message, "path": None if item.path is None else str(item.path)} for item in report.issues],
+            }
+        )
         return 0 if report.passed else 1
     registry = _registry()
     if args.dataset not in registry:

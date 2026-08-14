@@ -83,3 +83,9 @@ def test_cli_dataset_card_validation(tmp_path) -> None:
     invalid = tmp_path / "bad.json"
     invalid.write_text("{}", encoding="utf-8")
     assert main(["data", "card-validate", "--card", str(invalid)]) == 1
+
+
+def test_cli_preflight_audit_rejects_invalid_metadata_without_opening_signals(tmp_path) -> None:
+    invalid = tmp_path / "preflight.json"
+    invalid.write_text("{}", encoding="utf-8")
+    assert main(["data", "preflight-audit", "--plan", str(invalid)]) == 1
