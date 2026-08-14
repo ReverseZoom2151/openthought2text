@@ -13,6 +13,7 @@ import torch
 from openthought2text.data import (
     AdapterRegistry,
     DatasetManifest,
+    validate_dataset_card,
     SplitProtocol,
     SyntheticNeuralTextAdapter,
     audit_splits,
@@ -58,6 +59,8 @@ def build_parser() -> argparse.ArgumentParser:
         command = data_subparsers.add_parser(name)
         command.add_argument("--dataset", required=True)
         command.add_argument("--root", type=_path, required=True)
+    card = data_subparsers.add_parser("card-validate", help="Validate a checksummed dataset card")
+    card.add_argument("--card", type=_path, required=True)
 
     splits = subparsers.add_parser("splits", help="Split audits")
     splits_subparsers = splits.add_subparsers(dest="splits_command", required=True)
@@ -117,6 +120,11 @@ def _emit(value: object) -> None:
 
 
 def _run_data(args: argparse.Namespace) -> int:
+    if args.data_command == "card-validate":
+        report = validate_dataset_card(args.card)
+        _emit({"passed": report.passed, "card": None if report.card is None else report.card.to_dict(),
+               "issues": [{"code": item.code, "message": item.message} for item in report.issues]})
+        return 0 if report.passed else 1
     registry = _registry()
     if args.dataset not in registry:
         available = ", ".join(registry.names())
