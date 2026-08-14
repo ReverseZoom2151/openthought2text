@@ -28,6 +28,11 @@ from .prepared import (
     tensor_checksum,
     write_prepared_artifact_manifest,
 )
+from .batching import (
+    NeuralTensorBatch,
+    VariableLengthTensorDataset,
+    collate_tensor_backed_samples,
+)
 from .zuco import (
     ZuCoDiscoveryAdapter,
     ZuCoDiscoveryReport,
@@ -46,6 +51,7 @@ __all__ = [
     "InformationAccess",
     "Modality",
     "NeuralTextSample",
+    "NeuralTensorBatch",
     "PretrainingExposure",
     "PreparedArtifactManifest",
     "PreparedTensorRecord",
@@ -55,6 +61,7 @@ __all__ = [
     "SyntheticNeuralTextAdapter",
     "SyntheticValidationReport",
     "TensorBackedSample",
+    "VariableLengthTensorDataset",
     "ZuCoDiscoveryAdapter",
     "ZuCoDiscoveryReport",
     "ZuCoLayoutIssue",
@@ -62,6 +69,7 @@ __all__ = [
     "ZuCoTaskInventory",
     "audit_splits",
     "build_prepared_artifact_manifest",
+    "collate_tensor_backed_samples",
     "fit_train_channel_normalizer",
     "load_manifest",
     "load_prepared_artifact_manifest",

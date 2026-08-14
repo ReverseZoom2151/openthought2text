@@ -44,6 +44,8 @@ class TensorBackedSample:
 
     sample: NeuralTextSample
     values: torch.Tensor
+    channel_mask: torch.Tensor | None = None
+    time_mask: torch.Tensor | None = None
 
     def __post_init__(self) -> None:
         if self.values.ndim != 2:
@@ -56,10 +58,47 @@ class TensorBackedSample:
             raise ValueError("prepared values must use a floating-point dtype")
         if not torch.isfinite(self.values).all():
             raise ValueError("prepared values must be finite")
+        if self.channel_mask is not None:
+            expected_channels = (self.values.shape[0],)
+            invalid_channel_mask = (
+                self.channel_mask.dtype != torch.bool
+                or self.channel_mask.shape != expected_channels
+            )
+            if invalid_channel_mask:
+                raise ValueError("channel_mask must be bool with shape [channels]")
+            if not self.channel_mask.any():
+                raise ValueError("at least one channel must be valid")
+        if self.time_mask is not None:
+            if self.time_mask.dtype != torch.bool or self.time_mask.shape != self.values.shape[1:]:
+                raise ValueError("time_mask must be bool with shape [time]")
+            if not self.time_mask.any():
+                raise ValueError("at least one time sample must be valid")
+
+    @property
+    def resolved_channel_mask(self) -> torch.Tensor:
+        if self.channel_mask is None:
+            return torch.ones(self.values.shape[0], dtype=torch.bool, device=self.values.device)
+        return self.channel_mask
+
+    @property
+    def resolved_time_mask(self) -> torch.Tensor:
+        if self.time_mask is None:
+            return torch.ones(self.values.shape[1], dtype=torch.bool, device=self.values.device)
+        return self.time_mask
+
+    @property
+    def valid_mask(self) -> torch.Tensor:
+        return self.resolved_channel_mask.unsqueeze(-1) & self.resolved_time_mask.unsqueeze(0)
 
     @property
     def checksum(self) -> str:
-        return tensor_checksum(self.values)
+        return _canonical_hash(
+            {
+                "values": tensor_checksum(self.values),
+                "channel_mask": self.resolved_channel_mask.detach().cpu().tolist(),
+                "time_mask": self.resolved_time_mask.detach().cpu().tolist(),
+            }
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -148,13 +187,21 @@ def fit_train_channel_normalizer(
     channels = rows[0].values.shape[0]
     if any(row.values.shape[0] != channels for row in rows):
         raise ValueError("all train tensors must have the same channel count")
-    fit_values = [
-        row.values.detach().to(dtype=torch.float64, device="cpu")
-        for row in rows
-    ]
-    values = torch.cat(fit_values, dim=1)
-    mean = values.mean(dim=1)
-    scale = values.std(dim=1, correction=0).clamp_min(epsilon)
+    sums = torch.zeros(channels, dtype=torch.float64)
+    squared_sums = torch.zeros(channels, dtype=torch.float64)
+    counts = torch.zeros(channels, dtype=torch.float64)
+    for row in rows:
+        values = row.values.detach().to(dtype=torch.float64, device="cpu")
+        valid = row.valid_mask.detach().to(device="cpu")
+        masked_values = torch.where(valid, values, torch.zeros_like(values))
+        sums += masked_values.sum(dim=1)
+        squared_sums += masked_values.square().sum(dim=1)
+        counts += valid.sum(dim=1)
+    if torch.any(counts == 0):
+        raise ValueError("each channel needs at least one valid train value")
+    mean = sums / counts
+    variance = (squared_sums / counts - mean.square()).clamp_min(0)
+    scale = variance.sqrt().clamp_min(epsilon)
     return ChannelNormalizer(
         mean=mean,
         scale=scale,
