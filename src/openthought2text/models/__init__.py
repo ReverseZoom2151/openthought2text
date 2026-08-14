@@ -3,6 +3,7 @@
 from .adaptation_contracts import (
     LoRAAdapterConfig,
     LoRAAdapterContract,
+    LoRALinearAdapter,
     LoRAProvenance,
     LoRAScheduleConfig,
     NeuralFeatureProjector,
@@ -230,6 +231,7 @@ __all__ = [
     "validate_checkpoint_architecture",
     "LoRAAdapterConfig",
     "LoRAAdapterContract",
+    "LoRALinearAdapter",
     "LoRAProvenance",
     "LoRAScheduleConfig",
     "NeuralFeatureProjector",

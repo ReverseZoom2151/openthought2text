@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+import torch
 from torch import nn
 
 
@@ -117,3 +118,49 @@ class LoRAAdapterContract:
 
     def training_scale(self, global_step: int) -> float:
         return self.schedule.scale_at(global_step)
+
+
+class LoRALinearAdapter(nn.Module):
+    """Merge-free frozen base projection plus a trainable low-rank residual."""
+
+    def __init__(self, base_projection, config, provenance, schedule=None):
+        super().__init__()
+        if not isinstance(base_projection, nn.Linear):
+            raise ValueError("base_projection must be an already-instantiated nn.Linear")
+        self.base_projection, self.config, self.provenance = base_projection, config, provenance
+        self.schedule = schedule or LoRAScheduleConfig()
+        for parameter in base_projection.parameters():
+            parameter.requires_grad_(False)
+        base_projection.eval()
+        self.down = nn.Linear(base_projection.in_features, config.rank, bias=False)
+        self.up = nn.Linear(config.rank, base_projection.out_features, bias=False)
+        self.dropout = nn.Dropout(config.dropout)
+        nn.init.normal_(self.up.weight, std=1e-4)
+
+    def train(self, mode=True):
+        super().train(mode)
+        self.base_projection.eval()
+        return self
+
+    def forward(self, features, mask=None, scale=1.0):
+        if features.ndim < 2 or features.shape[-1] != self.base_projection.in_features:
+            raise ValueError("features must end in base_projection input size")
+        if not isinstance(scale, (int, float)) or scale < 0:
+            raise ValueError("scale must be nonnegative")
+        if mask is not None and mask.shape != features.shape[:-1]:
+            raise ValueError("mask must match feature leading axes")
+        valid = (
+            torch.ones(features.shape[:-1], dtype=torch.bool, device=features.device)
+            if mask is None
+            else mask.bool()
+        )
+        values = features * valid.unsqueeze(-1).to(features.dtype)
+        residual = (
+            self.up(self.dropout(self.down(values)))
+            * (self.config.alpha / self.config.rank)
+            * float(scale)
+        )
+        return (self.base_projection(values) + residual) * valid.unsqueeze(-1).to(features.dtype)
+
+    def scheduled_forward(self, features, global_step, mask=None):
+        return self(features, mask, self.schedule.scale_at(global_step))
