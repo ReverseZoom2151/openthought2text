@@ -16,6 +16,7 @@ from .heads import (
     SemanticAnchorOutput,
     greedy_ctc_decode,
 )
+from .model import NeuralToTextGenerationOutput, NeuralToTextModel, NeuralToTextTrainingOutput
 from .subject import SubjectAdapter, SubjectAdapterMode
 from .tokenizer import (
     CodebookHealth,
@@ -39,6 +40,9 @@ __all__ = [
     "NeuralEncoderOutput",
     "NeuralTokenizerConfig",
     "NeuralTokenizerOutput",
+    "NeuralToTextGenerationOutput",
+    "NeuralToTextModel",
+    "NeuralToTextTrainingOutput",
     "NeuralVectorQuantizer",
     "SubjectAdapter",
     "SubjectAdapterMode",
