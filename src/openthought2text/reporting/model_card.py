@@ -7,6 +7,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Mapping
 
+from .model_card_validation import compute_model_card_reference_bindings
+
 
 class ModelCardError(ValueError):
     """A model-card artifact lacks the evidence needed to make its status clear."""
@@ -41,7 +43,8 @@ def generate_model_card(
     """
     _validate_inputs(evaluation, provenance, release_gate, artifact_references)
     status = ModelCardStatus.CLAIMED if release_gate.passed else ModelCardStatus.UNSUPPORTED
-    markdown = _render_markdown(evaluation, provenance, release_gate, status, artifact_references)
+    bindings = compute_model_card_reference_bindings(evaluation, provenance, release_gate)
+    markdown = _render_markdown(evaluation, provenance, release_gate, status, artifact_references, bindings)
     return ModelCardArtifact(run_id=evaluation.run_id, status=status, markdown=markdown)
 
 
@@ -73,6 +76,7 @@ def _render_markdown(
     gate: Any,
     status: ModelCardStatus,
     references: Mapping[str, str],
+    bindings: Any,
 ) -> str:
     title = _escape(provenance.model.identifier)
     lines = [f"# Model Card: {title}", "", "## Evidence status", ""]
@@ -118,6 +122,18 @@ def _render_markdown(
         ("Resolved config", provenance.config.uri, provenance.config.sha256),
     )
     lines.extend(f"| {_escape(name)} | `{_escape(reference)}` | `{checksum}` |" for name, reference, checksum in rows)
+    lines.extend(
+        [
+            "",
+            "## Evidence bindings",
+            "",
+            "| Binding | SHA-256 |",
+            "| --- | --- |",
+            f"| Provenance binding | `{bindings.provenance_sha256}` |",
+            f"| Evaluation binding | `{bindings.evaluation_sha256}` |",
+            f"| Release gate binding | `{bindings.release_gate_sha256}` |",
+        ]
+    )
     lines.extend(["", "## Measured evaluation", "", "| Metric | Value | Grounded gain | Neural contribution |", "| --- | ---: | ---: | ---: |"])
     for metric, value in sorted(evaluation.metrics.items()):
         grounding = evaluation.grounding.get(metric)
