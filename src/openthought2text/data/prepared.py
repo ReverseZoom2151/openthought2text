@@ -34,7 +34,9 @@ def tensor_checksum(values: torch.Tensor) -> str:
     digest = sha256()
     digest.update(str(cpu.dtype).encode("utf-8"))
     digest.update(json.dumps(list(cpu.shape), separators=(",", ":")).encode("utf-8"))
-    digest.update(cpu.view(torch.uint8).numpy().tobytes())
+    # Keep this artifact contract dependency-light: the test/runtime package
+    # does not require NumPy, so avoid Tensor.numpy() here.
+    digest.update(bytes(cpu.view(torch.uint8).reshape(-1).tolist()))
     return digest.hexdigest()
 
 
