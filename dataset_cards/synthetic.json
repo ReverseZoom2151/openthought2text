@@ -1,0 +1,19 @@
+{
+  "access": "Public source-code fixture.",
+  "checksum": "2d1edacac3a1df87d62d23f58c0d81944a56e7ac0fb37a1f62ed0a3a9812ffdf",
+  "consent": "No participant data; generated deterministic fixture.",
+  "dataset_id": "synthetic_neural_text_v1",
+  "kind": "openthought2text.dataset_card",
+  "license": "Apache-2.0",
+  "modality": ["eeg"],
+  "preprocessing": {
+    "description": "Portable deterministic two-channel JSON signal fixture",
+    "version": "1"
+  },
+  "source": "OpenThought2Text deterministic non-participant fixture",
+  "splits": {
+    "protocol": "subject_disjoint",
+    "unit": "subject"
+  },
+  "version": "1.0"
+}

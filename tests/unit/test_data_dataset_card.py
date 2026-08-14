@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from openthought2text.data.dataset_card import (
     DatasetCard,
@@ -57,3 +58,9 @@ def test_dataset_card_rejects_yaml_and_invalid_json(tmp_path) -> None:
     json_path = tmp_path / "dataset_card.json"
     json_path.write_text("not json", encoding="utf-8")
     assert validate_dataset_card(json_path).issues[0].code == "INVALID_CARD_JSON"
+
+
+def test_checked_in_synthetic_card_is_valid() -> None:
+    root = Path(__file__).resolve().parents[2]
+    card = load_dataset_card(root / "dataset_cards" / "synthetic.json")
+    assert card.dataset_id == "synthetic_neural_text_v1"
