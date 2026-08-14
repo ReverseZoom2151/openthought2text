@@ -1,6 +1,11 @@
 """Dependency-light model primitives for OpenThought2Text."""
 
 from .channels import CoordinateChannelMerger
+from .checkpoint import (
+    CheckpointArchitectureCompatibility,
+    checkpoint_architecture_metadata,
+    validate_checkpoint_architecture,
+)
 from .alignment import (
     ContrastiveAlignmentOutput,
     GroupAwareSymmetricInfoNCE,
@@ -44,6 +49,7 @@ from .types import NeuralEncoderOutput, TokenTiming
 __all__ = [
     "CodebookHealth",
     "CandidateRankingOutput",
+    "CheckpointArchitectureCompatibility",
     "ContrastiveAlignmentOutput",
     "ContinuousNeuralEncoder",
     "CoordinateChannelMerger",
@@ -78,6 +84,8 @@ __all__ = [
     "architecture_fingerprint",
     "build_neural_to_text_model",
     "codebook_health",
+    "checkpoint_architecture_metadata",
     "describe_model_architecture",
     "greedy_ctc_decode",
+    "validate_checkpoint_architecture",
 ]
