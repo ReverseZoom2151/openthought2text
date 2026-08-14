@@ -38,6 +38,13 @@ from .factory import (
     build_neural_to_text_model,
     describe_model_architecture,
 )
+from .factorized_scoring import (
+    EvidenceFactorizedCandidateScorer,
+    FactorizedCandidateScoringOutput,
+    FactorizedScoringControl,
+    ValidationFittedScoreWeights,
+    fit_factorized_score_weights,
+)
 from .heads import (
     CTCProductionHead,
     CTCProductionOutput,
@@ -98,6 +105,9 @@ __all__ = [
     "DecoderGenerationConfig",
     "DecoderTrainingOutput",
     "EvidenceGroundedCandidateRanker",
+    "EvidenceFactorizedCandidateScorer",
+    "FactorizedCandidateScoringOutput",
+    "FactorizedScoringControl",
     "GroupAwareSymmetricInfoNCE",
     "GraphMontageAdapter",
     "GRUNeuralEncoder",
@@ -135,12 +145,14 @@ __all__ = [
     "TORCHSCRIPT_SCOPE_NEURAL_ENCODER_EVIDENCE",
     "TokenTiming",
     "TorchScriptExportValidation",
+    "ValidationFittedScoreWeights",
     "architecture_fingerprint",
     "build_neural_to_text_model",
     "codebook_health",
     "checkpoint_architecture_metadata",
     "describe_model_architecture",
     "export_neural_encoder_evidence_torchscript",
+    "fit_factorized_score_weights",
     "greedy_ctc_decode",
     "gradient_reverse",
     "select_mask_positions",
