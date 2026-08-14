@@ -58,6 +58,15 @@ from .benchmark_table import (
     render_benchmark_csv,
     render_benchmark_markdown,
 )
+from .continuous import (
+    ContinuousAssembly,
+    ContinuousCoverage,
+    ContinuousTimingSummary,
+    TimestampedPredictionWindow,
+    WindowMergePolicy,
+    assemble_continuous_windows,
+    summarize_continuous_timing,
+)
 from .metrics import (
     ErrorRate,
     RetrievalMetrics,
@@ -94,7 +103,8 @@ from .statistics import (
 
 __all__ = [
     "BENCHMARK_TABLE_VERSION", "BenchmarkProvenanceReferences", "BenchmarkRowLabel",
-    "BenchmarkTableArtifact", "BenchmarkTableRow", "BootstrapInterval", "ControlAggregate", "ControlResult",
+    "BenchmarkTableArtifact", "BenchmarkTableRow", "BootstrapInterval", "ContinuousAssembly",
+    "ContinuousCoverage", "ContinuousTimingSummary", "ControlAggregate", "ControlResult",
     "DEFAULT_SIGNAL_CONTROLS",
     "EVALUATION_REPORT_VERSION",
     "EditOperations", "ErrorRate", "EvaluationReport", "FaithfulnessConditionResult",
@@ -104,16 +114,16 @@ __all__ = [
     "OcclusionMetadata", "OcclusionMode", "OcclusionResult", "OcclusionSuiteResult", "OcclusionVariant",
     "PREDICTION_RECORD_VERSION", "PairedPermutationResult", "PredictionRecord", "RetrievalInputs",
     "ReleaseGatePolicy", "ReleaseGateResult", "RetrievalMetrics", "TextErrorCategory",
-    "TextErrorRecord", "TextErrorReport",
+    "TextErrorRecord", "TextErrorReport", "TimestampedPredictionWindow", "WindowMergePolicy",
     "aggregate_control_results",
     "assert_label_invariance", "assert_target_free_signature", "audit_label_invariance",
     "build_grounding_report", "character_error_rate", "corpus_character_error_rate",
     "corpus_word_error_rate", "edit_distance", "forbidden_generation_parameters",
-    "aggregate_occlusion_drops", "assess_release_evidence", "classify_text_error",
+    "aggregate_occlusion_drops", "assemble_continuous_windows", "assess_release_evidence", "classify_text_error",
     "classify_text_errors", "cluster_bootstrap_ci",
     "evaluate_saved_predictions", "generate_target_free_prediction_records", "grounded_gain",
     "occlude_channel_time", "occlude_channels", "occlude_time", "paired_permutation_test",
-    "run_faithfulness_suite", "run_occlusion_suite",
+    "run_faithfulness_suite", "run_occlusion_suite", "summarize_continuous_timing",
     "read_evaluation_report", "read_prediction_jsonl", "retrieval_metrics",
     "retrieval_ranks", "stimulus_bootstrap_ci", "subject_bootstrap_ci", "word_error_rate",
     "render_benchmark_csv", "render_benchmark_markdown", "token_ids_to_prediction_records",
