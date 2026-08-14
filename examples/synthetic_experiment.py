@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from hashlib import sha256
-import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -23,6 +22,7 @@ from openthought2text.data import (
     collate_tensor_backed_samples,
     fit_train_channel_normalizer,
     fit_train_text_tokenizer,
+    load_json_tensor_samples,
 )
 from openthought2text.models import NeuralToTextModelConfig, build_neural_to_text_model
 from openthought2text.training import CheckpointMetadata, save_checkpoint, seed_everything, supervised_train_step
@@ -45,10 +45,7 @@ def main() -> None:
     with TemporaryDirectory(prefix="openthought2text-example-") as directory:
         root = Path(directory)
         manifest = SyntheticNeuralTextAdapter().generate(str(root))
-        prepared = []
-        for sample in manifest.samples:
-            values = torch.tensor(json.loads(Path(sample.signal.uri).read_text()), dtype=torch.float32)
-            prepared.append(TensorBackedSample(sample, values))
+        prepared = load_json_tensor_samples(manifest, root)
         train = tuple(row for row in prepared if row.sample.split == "train")
         held_out = tuple(row for row in prepared if row.sample.split != "train")
         normalizer = fit_train_channel_normalizer(train)
