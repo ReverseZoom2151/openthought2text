@@ -7,6 +7,19 @@ import pytest
 
 from openthought2text.cli.main import main
 from openthought2text.data import SyntheticNeuralTextAdapter, load_manifest
+from openthought2text.evaluation import (
+    BenchmarkRowLabel,
+    ControlResult,
+    EvaluationReport,
+    PredictionRecord,
+    write_prediction_jsonl,
+)
+from openthought2text.reporting import (
+    ArtifactBinding,
+    InformationAccessContract,
+    RunArtifactProvenance,
+    write_provenance_report,
+)
 
 
 def test_cli_splits_build_writes_derived_manifest_and_sidecar_without_mutating_source(
@@ -120,4 +133,101 @@ def test_cli_execution_spec_validation_fails_without_loading_models_or_data(tmp_
     spec.write_text("{}", encoding="utf-8")
     with pytest.raises(SystemExit) as error:
         main(["report", "validate-execution-spec", "--spec", str(spec)])
+    assert error.value.code == 2
+
+
+def test_cli_failure_review_renders_only_validated_saved_artifacts(tmp_path) -> None:
+    prediction_path = tmp_path / "predictions.jsonl"
+    error_path = tmp_path / "errors.json"
+    evaluation_path = tmp_path / "evaluation.json"
+    provenance_path = tmp_path / "provenance.json"
+    write_prediction_jsonl(
+        prediction_path,
+        (
+            PredictionRecord("sample", "decoded", "run", control="full"),
+            PredictionRecord("sample", "noise", "run", control="noise"),
+        ),
+    )
+    error_path.write_text(
+        json.dumps(
+            [
+                {
+                    "sample_id": "sample",
+                    "reference": "reference",
+                    "hypothesis": "decoded",
+                    "category": "substitution",
+                    "operations": {"substitutions": 1},
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    evaluation = EvaluationReport(
+        "run",
+        BenchmarkRowLabel("synthetic", "eeg", "read", "trial", "loso", "open", "greedy"),
+        {"wer": 1.0},
+        1,
+        str(prediction_path),
+        (ControlResult("full", {"wer": 1.0}, 1), ControlResult("noise", {"wer": 1.0}, 1)),
+    )
+    evaluation_path.write_text(json.dumps(evaluation.to_dict()), encoding="utf-8")
+    bind = lambda name, character: ArtifactBinding(name, name + ".json", character * 64)
+    write_provenance_report(
+        provenance_path,
+        RunArtifactProvenance(
+            "run",
+            bind("model", "a"),
+            bind("checkpoint", "b"),
+            bind("data", "c"),
+            bind("split", "d"),
+            bind("config", "e"),
+            "rev",
+            InformationAccessContract(
+                True, False, False, False, False, False, False, "loso", "manual"
+            ),
+        ),
+    )
+
+    output = tmp_path / "failure-review"
+    assert (
+        main(
+            [
+                "report",
+                "failure-review",
+                "--predictions",
+                str(prediction_path),
+                "--errors",
+                str(error_path),
+                "--evaluation",
+                str(evaluation_path),
+                "--provenance",
+                str(provenance_path),
+                "--output",
+                str(output),
+            ]
+        )
+        == 0
+    )
+    assert {path.name for path in output.iterdir()} == {
+        "review.json",
+        "failure-review.md",
+        "gallery.html",
+    }
+    with pytest.raises(SystemExit) as error:
+        main(
+            [
+                "report",
+                "failure-review",
+                "--predictions",
+                str(prediction_path),
+                "--errors",
+                str(error_path),
+                "--evaluation",
+                str(evaluation_path),
+                "--provenance",
+                str(provenance_path),
+                "--output",
+                str(output),
+            ]
+        )
     assert error.value.code == 2

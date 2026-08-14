@@ -38,7 +38,10 @@ from openthought2text.evaluation import (
     write_prediction_jsonl,
 )
 from openthought2text.models import NeuralToTextModelConfig, build_neural_to_text_model
-from openthought2text.reporting import validate_target_free_spec_file
+from openthought2text.reporting import (
+    load_failure_artifact_render,
+    validate_target_free_spec_file,
+)
 from openthought2text.training import (
     CheckpointMetadata,
     build_training_inputs,
@@ -123,6 +126,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Validate a target-free control-plan specification without executing a model",
     )
     validate_spec.add_argument("--spec", type=_path, required=True)
+    failure_review = report_subparsers.add_parser(
+        "failure-review",
+        help="Render a saved, target-free failure review without executing inference",
+    )
+    failure_review.add_argument("--predictions", type=_path, required=True)
+    failure_review.add_argument("--errors", type=_path, required=True)
+    failure_review.add_argument("--evaluation", type=_path, required=True)
+    failure_review.add_argument("--provenance", type=_path, required=True)
+    failure_review.add_argument(
+        "--output",
+        type=_path,
+        required=True,
+        help="new directory for review.json, failure-review.md, and gallery.html",
+    )
     return parser
 
 
@@ -457,6 +474,31 @@ def _run_report(args: argparse.Namespace) -> int:
         result = validate_target_free_spec_file(args.spec)
         _emit(result.to_dict())
         return 0 if result.valid else 1
+    if args.report_command == "failure-review":
+        if args.output.exists():
+            raise ValueError("refusing to overwrite an existing failure-review output directory")
+        result = load_failure_artifact_render(
+            args.predictions,
+            args.errors,
+            args.evaluation,
+            args.provenance,
+        )
+        args.output.mkdir(parents=True)
+        (args.output / "review.json").write_text(
+            json.dumps(result.to_dict(), sort_keys=True, indent=2) + "\n", encoding="utf-8"
+        )
+        (args.output / "failure-review.md").write_text(
+            result.to_markdown() + "\n", encoding="utf-8"
+        )
+        (args.output / "gallery.html").write_text(result.gallery.html + "\n", encoding="utf-8")
+        _emit(
+            {
+                "output": str(args.output),
+                "case_count": len(result.explorer.cases),
+                "no_performance_claim": "Saved-artifact review only; no evaluation was executed.",
+            }
+        )
+        return 0
     report = read_evaluation_report(args.report)
     _emit(
         {
@@ -487,7 +529,11 @@ def main(argv: list[str] | None = None) -> int:
             return _run_synthetic_training(args)
         if args.command == "evaluate":
             return _run_evaluation(args)
-        if args.command == "report" and args.report_command in {"build", "validate-execution-spec"}:
+        if args.command == "report" and args.report_command in {
+            "build",
+            "failure-review",
+            "validate-execution-spec",
+        }:
             return _run_report(args)
         print(f"OpenThought2Text command accepted: {args.command}")
         print("Use the dataset/model modules to execute the selected reproducible workflow.")
