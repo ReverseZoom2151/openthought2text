@@ -124,6 +124,12 @@ from .sensor_layout import (
     SensorType,
     sensor_layout_to_tensor,
 )
+from .labram_patching import (
+    LABRAM_INPUT_PATCH_VERSION,
+    LaBraMInputPatchConfig,
+    PatchedNeuralInput,
+    patch_tensor_backed_sample,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -147,6 +153,8 @@ __all__ = [
     "DatasetReleaseBundle",
     "InformationAccess",
     "LabelAccess",
+    "LABRAM_INPUT_PATCH_VERSION",
+    "LaBraMInputPatchConfig",
     "ManifestSplit",
     "MontageProvenance",
     "Modality",
@@ -157,6 +165,7 @@ __all__ = [
     "PretrainingExposure",
     "PreparedArtifactManifest",
     "PreparedTensorRecord",
+    "PatchedNeuralInput",
     "RELEASE_BUNDLE_KIND",
     "RELEASE_BUNDLE_VERSION",
     "ReleaseArtifactReference",
@@ -216,6 +225,7 @@ __all__ = [
     "tokenize_text",
     "select_split_samples",
     "select_named_montage",
+    "patch_tensor_backed_sample",
     "sensor_layout_to_tensor",
     "write_manifest",
     "write_dataset_card",
