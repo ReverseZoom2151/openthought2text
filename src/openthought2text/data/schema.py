@@ -21,6 +21,7 @@ class Modality(str, Enum):
     EEG = "eeg"
     MEG = "meg"
     ECoG = "ecog"
+    INTRACORTICAL = "intracortical"
     FMRI = "fmri"
     OTHER = "other"
 
