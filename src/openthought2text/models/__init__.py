@@ -67,6 +67,7 @@ from .heads import (
 )
 from .model import NeuralToTextGenerationOutput, NeuralToTextModel, NeuralToTextTrainingOutput
 from .montage import GraphMontageAdapter
+from .multitask import BalancedTaskSchedule, GradientConflictLog, MultiParadigmTaskConfig, MultiParadigmTaskHead, MultiTaskTrainingOutput, TaskTrackConfig, gradient_conflict_log
 from .masked_token_pretraining import (
     MaskedNeuralTokenConfig,
     MaskedNeuralTokenObjectiveOutput,
@@ -130,6 +131,13 @@ __all__ = [
     "FoundationPretrainingProvenance",
     "GroupAwareSymmetricInfoNCE",
     "GraphMontageAdapter",
+    "BalancedTaskSchedule",
+    "GradientConflictLog",
+    "MultiParadigmTaskConfig",
+    "MultiParadigmTaskHead",
+    "MultiTaskTrainingOutput",
+    "TaskTrackConfig",
+    "gradient_conflict_log",
     "GRUNeuralEncoder",
     "NeuralEncoderOutput",
     "NeuralTokenizerConfig",
