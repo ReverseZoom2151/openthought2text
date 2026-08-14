@@ -45,6 +45,10 @@ from .release_gate import (
     ReleaseGateResult,
     assess_release_evidence,
 )
+from .token_predictions import (
+    generate_target_free_prediction_records,
+    token_ids_to_prediction_records,
+)
 from .metrics import (
     ErrorRate,
     RetrievalMetrics,
@@ -97,10 +101,11 @@ __all__ = [
     "corpus_word_error_rate", "edit_distance", "forbidden_generation_parameters",
     "aggregate_occlusion_drops", "assess_release_evidence", "classify_text_error",
     "classify_text_errors", "cluster_bootstrap_ci",
-    "evaluate_saved_predictions", "grounded_gain",
+    "evaluate_saved_predictions", "generate_target_free_prediction_records", "grounded_gain",
     "occlude_channel_time", "occlude_channels", "occlude_time", "paired_permutation_test",
     "run_faithfulness_suite", "run_occlusion_suite",
     "read_evaluation_report", "read_prediction_jsonl", "retrieval_metrics",
     "retrieval_ranks", "stimulus_bootstrap_ci", "subject_bootstrap_ci", "word_error_rate",
-    "word_edit_operations", "write_evaluation_report", "write_prediction_jsonl",
+    "token_ids_to_prediction_records", "word_edit_operations", "write_evaluation_report",
+    "write_prediction_jsonl",
 ]
