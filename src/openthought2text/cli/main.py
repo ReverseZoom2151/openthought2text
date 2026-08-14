@@ -7,6 +7,12 @@ import json
 from pathlib import Path
 
 from openthought2text.data import AdapterRegistry, SyntheticNeuralTextAdapter, audit_splits, load_manifest
+from openthought2text.evaluation import (
+    BenchmarkRowLabel,
+    evaluate_saved_predictions,
+    read_evaluation_report,
+    write_evaluation_report,
+)
 from openthought2text.version import __version__
 
 
@@ -40,6 +46,16 @@ def build_parser() -> argparse.ArgumentParser:
     controls = evaluate_subparsers.add_parser("compare-controls")
     controls.add_argument("--run", type=_path, required=True)
     controls.add_argument("--controls", required=True)
+
+    saved = evaluate_subparsers.add_parser("saved-predictions")
+    saved.add_argument("--predictions", type=_path, required=True)
+    saved.add_argument("--benchmark", required=True)
+    saved.add_argument("--output", type=_path, required=True)
+
+    report = subparsers.add_parser("report", help="Read saved evaluation artifacts")
+    report_subparsers = report.add_subparsers(dest="report_command", required=True)
+    build = report_subparsers.add_parser("build")
+    build.add_argument("--report", type=_path, required=True)
     return parser
 
 
@@ -96,6 +112,36 @@ def _run_split_audit(args: argparse.Namespace) -> int:
     return 0 if report.passed else 1
 
 
+def _run_evaluation(args: argparse.Namespace) -> int:
+    if args.evaluate_command == "saved-predictions":
+        report = evaluate_saved_predictions(
+            args.predictions,
+            benchmark=BenchmarkRowLabel.parse(args.benchmark),
+            prediction_artifact=str(args.predictions),
+        )
+        write_evaluation_report(args.output, report)
+        _emit({"output": str(args.output), "metrics": report.metrics,
+               "grounding": {name: value.grounded_gain for name, value in report.grounding.items()}})
+        return 0
+    if args.evaluate_command == "compare-controls":
+        report = read_evaluation_report(args.run)
+        requested = set(args.controls.split(","))
+        selected = [row.to_dict() for row in report.control_results if row.condition.value in requested]
+        _emit({"run_id": report.run_id, "controls": selected,
+               "grounding": {name: value.grounded_gain for name, value in report.grounding.items()}})
+        return 0
+    print("audit-generation requires an explicitly configured model loader; use the Python audit API.")
+    return 0
+
+
+def _run_report(args: argparse.Namespace) -> int:
+    report = read_evaluation_report(args.report)
+    _emit({"run_id": report.run_id, "benchmark": report.benchmark.value, "metrics": report.metrics,
+           "prediction_count": report.prediction_count,
+           "grounded_gain": {name: value.grounded_gain for name, value in report.grounding.items()}})
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -104,6 +150,10 @@ def main(argv: list[str] | None = None) -> int:
             return _run_data(args)
         if args.command == "splits" and args.splits_command == "audit":
             return _run_split_audit(args)
+        if args.command == "evaluate":
+            return _run_evaluation(args)
+        if args.command == "report" and args.report_command == "build":
+            return _run_report(args)
         print(f"OpenThought2Text command accepted: {args.command}")
         print("Use the dataset/model modules to execute the selected reproducible workflow.")
         return 0
