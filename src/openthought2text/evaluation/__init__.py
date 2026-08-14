@@ -17,6 +17,15 @@ from .faithfulness import (
     run_faithfulness_suite,
 )
 from .evaluator import RetrievalInputs, evaluate_saved_predictions
+from .error_taxonomy import (
+    EditOperations,
+    TextErrorCategory,
+    TextErrorRecord,
+    TextErrorReport,
+    classify_text_error,
+    classify_text_errors,
+    word_edit_operations,
+)
 from .occlusion import (
     OcclusionMetadata,
     OcclusionMode,
@@ -67,19 +76,21 @@ __all__ = [
     "BenchmarkRowLabel", "BootstrapInterval", "ControlAggregate", "ControlResult",
     "DEFAULT_SIGNAL_CONTROLS",
     "EVALUATION_REPORT_VERSION",
-    "ErrorRate", "EvaluationReport", "FaithfulnessConditionResult", "FaithfulnessSuiteResult",
+    "EditOperations", "ErrorRate", "EvaluationReport", "FaithfulnessConditionResult",
+    "FaithfulnessSuiteResult",
     "GenerationAuditSummary", "GroundingReport", "LabelInvarianceResult", "MetricSpec",
     "OcclusionMetadata", "OcclusionMode", "OcclusionResult", "OcclusionSuiteResult", "OcclusionVariant",
     "PREDICTION_RECORD_VERSION", "PairedPermutationResult", "PredictionRecord", "RetrievalInputs",
-    "RetrievalMetrics",
+    "RetrievalMetrics", "TextErrorCategory", "TextErrorRecord", "TextErrorReport",
     "aggregate_control_results",
     "assert_label_invariance", "assert_target_free_signature", "audit_label_invariance",
     "build_grounding_report", "character_error_rate", "corpus_character_error_rate",
     "corpus_word_error_rate", "edit_distance", "forbidden_generation_parameters",
-    "aggregate_occlusion_drops", "cluster_bootstrap_ci", "evaluate_saved_predictions", "grounded_gain",
+    "aggregate_occlusion_drops", "classify_text_error", "classify_text_errors", "cluster_bootstrap_ci",
+    "evaluate_saved_predictions", "grounded_gain",
     "occlude_channel_time", "occlude_channels", "occlude_time", "paired_permutation_test",
     "run_faithfulness_suite", "run_occlusion_suite",
     "read_evaluation_report", "read_prediction_jsonl", "retrieval_metrics",
     "retrieval_ranks", "stimulus_bootstrap_ci", "subject_bootstrap_ci", "word_error_rate",
-    "write_evaluation_report", "write_prediction_jsonl",
+    "word_edit_operations", "write_evaluation_report", "write_prediction_jsonl",
 ]
