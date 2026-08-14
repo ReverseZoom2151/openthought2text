@@ -46,6 +46,14 @@ from .zuco_precomputed import (
     ZuCoFeatureSeverity,
     ZuCoPrecomputedFeatureAdapter,
 )
+from .splits import (
+    SplitPlan,
+    SplitProtocol,
+    SplitValidationReport,
+    SplitViolation,
+    build_split_plan,
+    validate_split_plan,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -62,6 +70,10 @@ __all__ = [
     "PreparedArtifactManifest",
     "PreparedTensorRecord",
     "SignalReference",
+    "SplitPlan",
+    "SplitProtocol",
+    "SplitValidationReport",
+    "SplitViolation",
     "TextTarget",
     "TimeInterval",
     "SyntheticNeuralTextAdapter",
@@ -79,6 +91,7 @@ __all__ = [
     "ZuCoTaskInventory",
     "audit_splits",
     "build_prepared_artifact_manifest",
+    "build_split_plan",
     "collate_tensor_backed_samples",
     "fit_train_channel_normalizer",
     "load_manifest",
@@ -86,4 +99,5 @@ __all__ = [
     "tensor_checksum",
     "write_manifest",
     "write_prepared_artifact_manifest",
+    "validate_split_plan",
 ]
