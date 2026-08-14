@@ -82,6 +82,7 @@ from .comparison import (
     compare_benchmark_results,
     render_comparison_markdown,
 )
+from .inference_benchmark import InferenceBenchmarkResult, benchmark_target_free_inference
 from .metrics import (
     ErrorRate,
     RetrievalMetrics,
@@ -129,7 +130,7 @@ __all__ = [
     "EditOperations", "ErrorRate", "EvaluationReport", "FaithfulnessConditionResult",
     "FaithfulnessSuiteResult",
     "GateFailure", "GateFailureCode", "GenerationAuditSummary", "GroundingReport",
-    "LabelInvarianceResult", "MetricDirection", "MetricSpec", "MetricUncertainty",
+    "InferenceBenchmarkResult", "LabelInvarianceResult", "MetricDirection", "MetricSpec", "MetricUncertainty",
     "OcclusionMetadata", "OcclusionMode", "OcclusionResult", "OcclusionSuiteResult", "OcclusionVariant",
     "PREDICTION_RECORD_VERSION", "PairedPermutationResult", "PredictionRecord", "RetrievalInputs",
     "ReleaseGatePolicy", "ReleaseGateResult", "RetrievalMetrics", "TextErrorCategory",
@@ -141,7 +142,7 @@ __all__ = [
     "corpus_word_error_rate", "edit_distance", "forbidden_generation_parameters",
     "aggregate_occlusion_drops", "assemble_continuous_windows", "assess_release_evidence", "calibration_summary", "classify_text_error", "compare_benchmark_results",
     "classify_text_errors", "cluster_bootstrap_ci",
-    "evaluate_saved_predictions", "generate_target_free_prediction_records", "grounded_gain",
+    "benchmark_target_free_inference", "evaluate_saved_predictions", "generate_target_free_prediction_records", "grounded_gain",
     "occlude_channel_time", "occlude_channels", "occlude_time", "paired_permutation_test",
     "run_faithfulness_suite", "run_occlusion_suite", "summarize_continuous_timing",
     "read_evaluation_report", "read_prediction_jsonl", "retrieval_metrics",
