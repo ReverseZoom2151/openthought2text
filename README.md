@@ -90,6 +90,7 @@ python examples/synthetic_workflow.py
 - [Capability status](docs/CAPABILITIES.md)
 - [Paper-fidelity status](docs/PAPER_FIDELITY.md)
 - [Data format and information-access contract](docs/DATA_FORMAT.md)
+- [Configuration](docs/CONFIGURATION.md)
 - [Reproducibility](docs/REPRODUCIBILITY.md) and [dependency policy](docs/DEPENDENCY_POLICY.md)
 - [Architecture](docs/architecture/README.md), [scope](docs/ethics/scope.md), and
   [workspace layout](docs/WORKSPACE_LAYOUT.md)

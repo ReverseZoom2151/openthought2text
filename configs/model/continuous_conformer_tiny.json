@@ -1,0 +1,11 @@
+{
+  "name": "continuous_conformer_tiny",
+  "input_channels": 2,
+  "model_dim": 64,
+  "num_layers": 2,
+  "num_heads": 4,
+  "stride_samples": 10,
+  "semantic_queries": 4,
+  "decoder_vocab_size": 64,
+  "decoder_max_length": 32
+}

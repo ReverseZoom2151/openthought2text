@@ -17,3 +17,5 @@ wandb/
 !src/openthought2text/data/**
 src/openthought2text/data/__pycache__/
 src/openthought2text/data/**/*.py[cod]
+!configs/data/
+!configs/data/**

@@ -1,0 +1,8 @@
+{
+  "adapter": "synthetic",
+  "subject_count": 3,
+  "trials_per_subject": 2,
+  "sample_rate_hz": 100.0,
+  "duration_s": 1.0,
+  "alignment_access": "trial"
+}

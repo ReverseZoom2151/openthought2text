@@ -1,0 +1,8 @@
+{
+  "paradigm": "reading",
+  "alignment_regime": "word_aligned",
+  "subject_protocol": "loso_subject_unique_text",
+  "text_constraint": "open_vocab",
+  "decoder_mode": "greedy",
+  "controls": ["full", "shuffled", "zero", "noise", "mask", "length", "timing", "phase_surrogate", "lm_only"]
+}
