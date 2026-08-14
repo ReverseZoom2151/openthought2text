@@ -19,6 +19,7 @@ from .candidate_ranking import (
     MaskedCandidateRankingLoss,
 )
 from .bottleneck import NeuralRepresentationBottleneck, NeuralRepresentationBottleneckOutput
+from .baselines import ChannelNetNeuralEncoder, CompactConformerNeuralEncoder, GRUNeuralEncoder
 from .decoder import DecoderGenerationConfig, DecoderTrainingOutput, TargetFreeAutoregressiveDecoder
 from .distillation import (
     ReducedChannelDistillationConfig,
@@ -78,7 +79,9 @@ __all__ = [
     "CodebookHealth",
     "CandidateRankingOutput",
     "CandidateRankingTrainingOutput",
+    "ChannelNetNeuralEncoder",
     "CheckpointArchitectureCompatibility",
+    "CompactConformerNeuralEncoder",
     "ContrastiveAlignmentOutput",
     "CrossSubjectAdversarialOutput",
     "CrossSubjectDomainAdversary",
@@ -91,6 +94,7 @@ __all__ = [
     "EvidenceGroundedCandidateRanker",
     "GroupAwareSymmetricInfoNCE",
     "GraphMontageAdapter",
+    "GRUNeuralEncoder",
     "NeuralEncoderOutput",
     "NeuralTokenizerConfig",
     "NeuralTokenizerOutput",
