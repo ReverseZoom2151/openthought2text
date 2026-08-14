@@ -7,6 +7,11 @@ from .clean_environment import (
     render_clean_environment_markdown,
 )
 from .execution_spec import EXECUTION_SPEC_VERSION, TargetFreeEvaluationSpec
+from .failure_artifacts import (
+    FailureArtifactRender,
+    build_failure_artifact_render,
+    load_failure_artifact_render,
+)
 from .model_card import (
     ModelCardArtifact,
     ModelCardError,
@@ -99,6 +104,9 @@ __all__ = [
     "aggregate_multi_seed",
     "EXECUTION_SPEC_VERSION",
     "TargetFreeEvaluationSpec",
+    "FailureArtifactRender",
+    "build_failure_artifact_render",
+    "load_failure_artifact_render",
     "ControlSuitePlanValidation",
     "FailureCaseExplorerArtifact",
     "build_failure_case_explorer",
