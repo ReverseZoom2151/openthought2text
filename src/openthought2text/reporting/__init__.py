@@ -54,6 +54,11 @@ from .reproduction_card import (
     read_reproduction_card,
     write_reproduction_card,
 )
+from .spec_validation import (
+    SerializedSpecValidation,
+    validate_serialized_target_free_spec,
+    validate_target_free_spec_file,
+)
 from .visualizations import (
     VisualizationFragment,
     render_control_leaderboard,
@@ -109,4 +114,7 @@ __all__ = [
     "render_data_quality_summary",
     "render_failure_case_gallery",
     "render_subject_benchmark_table",
+    "SerializedSpecValidation",
+    "validate_serialized_target_free_spec",
+    "validate_target_free_spec_file",
 ]

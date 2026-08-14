@@ -10,7 +10,6 @@ from hashlib import sha256
 from typing import Any
 
 from openthought2text.controls import ControlCondition
-from openthought2text.evaluation.records import BenchmarkRowLabel
 
 from .provenance import ArtifactBinding, ProvenanceError
 
@@ -26,7 +25,9 @@ class TargetFreeEvaluationSpec:
     checkpoint: ArtifactBinding
     resolved_config: ArtifactBinding
     control_conditions: tuple[ControlCondition, ...]
-    benchmark_rows: tuple[BenchmarkRowLabel, ...]
+    # Kept structural at import time: importing ``evaluation`` initializes its
+    # release-gate exports, which in turn depend on reporting provenance.
+    benchmark_rows: tuple[Any, ...]
     inference_fields: tuple[str, ...]
     required_output_artifacts: tuple[str, ...]
     schema_version: str = EXECUTION_SPEC_VERSION
@@ -84,6 +85,9 @@ class TargetFreeEvaluationSpec:
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> TargetFreeEvaluationSpec:
+        # Delay this import until reporting itself is fully initialized.
+        from openthought2text.evaluation.records import BenchmarkRowLabel
+
         spec = cls(
             str(data["preflight_plan_sha256"]),
             ArtifactBinding.from_dict(data["model"]),
