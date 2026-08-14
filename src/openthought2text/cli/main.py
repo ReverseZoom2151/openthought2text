@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
+from hashlib import sha256
 import json
 from pathlib import Path
+
+import torch
 
 from openthought2text.data import (
     AdapterRegistry,
@@ -13,6 +17,8 @@ from openthought2text.data import (
     SyntheticNeuralTextAdapter,
     audit_splits,
     build_split_plan,
+    collate_tensor_backed_samples,
+    load_json_tensor_samples,
     load_manifest,
     validate_split_plan,
     write_manifest,
@@ -22,7 +28,18 @@ from openthought2text.evaluation import (
     evaluate_saved_predictions,
     read_evaluation_report,
     write_evaluation_report,
+    token_ids_to_prediction_records,
+    write_prediction_jsonl,
 )
+from openthought2text.models import NeuralToTextModelConfig, build_neural_to_text_model
+from openthought2text.training import (
+    CheckpointMetadata,
+    build_training_inputs,
+    save_checkpoint,
+    seed_everything,
+    train_one_epoch,
+)
+from openthought2text.config.run import RunManifest
 from openthought2text.version import __version__
 
 
@@ -55,6 +72,14 @@ def build_parser() -> argparse.ArgumentParser:
     build_split.add_argument("--held-out-subject")
     build_split.add_argument("--validation-fraction", type=float, default=0.1)
     build_split.add_argument("--test-fraction", type=float, default=0.2)
+
+    train = subparsers.add_parser("train", help="Reproducible local training paths")
+    train_subparsers = train.add_subparsers(dest="train_command", required=True)
+    synthetic = train_subparsers.add_parser("synthetic", help="Run the non-participant synthetic trace")
+    synthetic.add_argument("--root", type=_path, required=True, help="prepared synthetic artifact root")
+    synthetic.add_argument("--output", type=_path, required=True, help="new run directory")
+    synthetic.add_argument("--epochs", type=int, default=1)
+    synthetic.add_argument("--seed", type=int, default=7)
 
     evaluate = subparsers.add_parser("evaluate", help="Evaluation and audit tools")
     evaluate_subparsers = evaluate.add_subparsers(dest="evaluate_command", required=True)
@@ -180,6 +205,68 @@ def _run_split_build(args: argparse.Namespace) -> int:
     return 0
 
 
+def _sha256_file(path: Path) -> str:
+    return sha256(path.read_bytes()).hexdigest()
+
+
+def _run_synthetic_training(args: argparse.Namespace) -> int:
+    if args.epochs < 1:
+        raise ValueError("epochs must be positive")
+    if args.output.exists():
+        raise ValueError("refusing to overwrite an existing run directory")
+    manifest_path = args.root / "synthetic_manifest.jsonl"
+    manifest = load_manifest(manifest_path)
+    seed_everything(args.seed)
+    rows = load_json_tensor_samples(manifest, args.root)
+    train_rows = tuple(row for row in rows if row.sample.split == "train")
+    test_rows = tuple(row for row in rows if row.sample.split == "test")
+    if not train_rows or not test_rows:
+        raise ValueError("synthetic run requires both train and test samples")
+    inputs = build_training_inputs(train_rows, unknown_policy="unk")
+    config = NeuralToTextModelConfig(
+        hidden_size=32, temporal_kernel=5, stride_samples=4, encoder_layers=1, decoder_layers=1,
+        encoder_heads=4, decoder_heads=4, vocabulary_size=len(inputs.tokenizer.vocabulary),
+        max_sequence_length=32, encoder_dropout=0.0, decoder_dropout=0.0,
+    )
+    model = build_neural_to_text_model(config)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+    steps = tuple(step for _ in range(args.epochs) for step in train_one_epoch(
+        model, inputs.rows, inputs.tokenizer, optimizer=optimizer, batch_size=2,
+        sample_rate_hz=train_rows[0].sample.signal.sampling_rate_hz,
+    ))
+    args.output.mkdir(parents=True)
+    (args.output / "tokenizer.json").write_text(json.dumps(inputs.tokenizer.to_dict(), sort_keys=True) + "\n", encoding="utf-8")
+    (args.output / "normalizer.json").write_text(json.dumps(inputs.normalizer.to_dict(), sort_keys=True) + "\n", encoding="utf-8")
+    run_id = f"synthetic-seed-{args.seed}"
+    checkpoint = args.output / "checkpoint.pt"
+    save_checkpoint(checkpoint, model=model, optimizer=optimizer, metadata=CheckpointMetadata(
+        epoch=args.epochs, step=len(steps), selection_metric="synthetic_train_loss",
+        selection_value=steps[-1].loss, run_manifest=RunManifest(
+            experiment_name=run_id, dataset_artifact_checksum=_sha256_file(manifest_path),
+            split_manifest_checksum=_sha256_file(manifest_path), seed=args.seed,
+            resolved_config={"model": asdict(config), "tokenizer_checksum": inputs.tokenizer.checksum,
+                             "normalizer_checksum": inputs.normalizer.checksum},
+        ),
+    ))
+    batch = collate_tensor_backed_samples(test_rows)
+    model.eval()
+    generated = model.generate(batch.signals, channel_mask=batch.channel_mask, token_mask=batch.time_mask,
+                               sample_rate_hz=test_rows[0].sample.signal.sampling_rate_hz)
+    # Random/untrained models may emit only special tokens; preserve that as an
+    # explicit evaluable empty prediction rather than failing serialization.
+    records = token_ids_to_prediction_records(
+        generated.token_ids,
+        batch.sample_ids,
+        lambda ids: inputs.tokenizer.decode(ids) or "<empty>",
+        run_id=run_id,
+    )
+    predictions = args.output / "predictions.jsonl"
+    write_prediction_jsonl(predictions, records)
+    _emit({"run_id": run_id, "output": str(args.output), "checkpoint": str(checkpoint),
+           "predictions": str(predictions), "steps": len(steps), "final_train_loss": steps[-1].loss})
+    return 0
+
+
 def _run_evaluation(args: argparse.Namespace) -> int:
     if args.evaluate_command == "saved-predictions":
         report = evaluate_saved_predictions(
@@ -221,6 +308,8 @@ def main(argv: list[str] | None = None) -> int:
                 return _run_split_audit(args)
             if args.splits_command == "build":
                 return _run_split_build(args)
+        if args.command == "train" and args.train_command == "synthetic":
+            return _run_synthetic_training(args)
         if args.command == "evaluate":
             return _run_evaluation(args)
         if args.command == "report" and args.report_command == "build":
