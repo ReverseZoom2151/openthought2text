@@ -6,7 +6,17 @@ import argparse
 import json
 from pathlib import Path
 
-from openthought2text.data import AdapterRegistry, SyntheticNeuralTextAdapter, audit_splits, load_manifest
+from openthought2text.data import (
+    AdapterRegistry,
+    DatasetManifest,
+    SplitProtocol,
+    SyntheticNeuralTextAdapter,
+    audit_splits,
+    build_split_plan,
+    load_manifest,
+    validate_split_plan,
+    write_manifest,
+)
 from openthought2text.evaluation import (
     BenchmarkRowLabel,
     evaluate_saved_predictions,
@@ -37,6 +47,14 @@ def build_parser() -> argparse.ArgumentParser:
     audit = splits_subparsers.add_parser("audit")
     audit.add_argument("--artifact", type=_path, required=True)
     audit.add_argument("--protocol", required=True)
+    build_split = splits_subparsers.add_parser("build", help="Build a derived, leakage-aware split")
+    build_split.add_argument("--manifest", type=_path, required=True)
+    build_split.add_argument("--output", type=_path, required=True)
+    build_split.add_argument("--protocol", choices=[item.value for item in SplitProtocol], required=True)
+    build_split.add_argument("--seed", type=int, default=0)
+    build_split.add_argument("--held-out-subject")
+    build_split.add_argument("--validation-fraction", type=float, default=0.1)
+    build_split.add_argument("--test-fraction", type=float, default=0.2)
 
     evaluate = subparsers.add_parser("evaluate", help="Evaluation and audit tools")
     evaluate_subparsers = evaluate.add_subparsers(dest="evaluate_command", required=True)
@@ -112,6 +130,56 @@ def _run_split_audit(args: argparse.Namespace) -> int:
     return 0 if report.passed else 1
 
 
+def _split_plan_path(derived_manifest_path: Path) -> Path:
+    """Return the required, deterministic sidecar location for a split plan."""
+    return derived_manifest_path.with_suffix(".split_plan.json")
+
+
+def _run_split_build(args: argparse.Namespace) -> int:
+    source_path = args.manifest
+    output_path = args.output
+    plan_path = _split_plan_path(output_path)
+    if output_path.exists() or plan_path.exists():
+        raise ValueError("refusing to overwrite derived manifest or split-plan sidecar")
+    source_manifest = load_manifest(source_path)
+    plan = build_split_plan(
+        source_manifest.samples,
+        args.protocol,
+        seed=args.seed,
+        held_out_subject=args.held_out_subject,
+        validation_fraction=args.validation_fraction,
+        test_fraction=args.test_fraction,
+    )
+    validation = validate_split_plan(source_manifest.samples, plan)
+    validation.require_valid()
+    metadata = dict(source_manifest.metadata)
+    metadata["derived_from_manifest"] = str(source_path)
+    metadata["split_plan"] = plan.to_dict()
+    derived_manifest = DatasetManifest(
+        dataset_id=source_manifest.dataset_id,
+        samples=plan.materialize(source_manifest.samples),
+        information_access=source_manifest.information_access,
+        source_url=source_manifest.source_url,
+        license=source_manifest.license,
+        description=source_manifest.description,
+        schema_version=source_manifest.schema_version,
+        metadata=metadata,
+    )
+    write_manifest(output_path, derived_manifest)
+    plan_path.write_text(json.dumps(plan.to_dict(), sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    _emit(
+        {
+            "source_manifest": str(source_path),
+            "derived_manifest": str(output_path),
+            "split_plan": str(plan_path),
+            "protocol": plan.protocol.value,
+            "sample_count": len(derived_manifest.samples),
+            "excluded_sample_count": len(plan.excluded_sample_ids),
+        }
+    )
+    return 0
+
+
 def _run_evaluation(args: argparse.Namespace) -> int:
     if args.evaluate_command == "saved-predictions":
         report = evaluate_saved_predictions(
@@ -148,8 +216,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "data":
             return _run_data(args)
-        if args.command == "splits" and args.splits_command == "audit":
-            return _run_split_audit(args)
+        if args.command == "splits":
+            if args.splits_command == "audit":
+                return _run_split_audit(args)
+            if args.splits_command == "build":
+                return _run_split_build(args)
         if args.command == "evaluate":
             return _run_evaluation(args)
         if args.command == "report" and args.report_command == "build":
