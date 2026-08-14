@@ -84,11 +84,27 @@ from .task_adapters import (
     TaskDiscoveryReport,
     TypedTaskDiscoveryAdapter,
 )
+from .authorized_features import (
+    AUTHORIZED_FEATURE_KIND,
+    AUTHORIZED_FEATURE_VERSION,
+    ArtifactAuditIssue,
+    ArtifactAuditReport,
+    AuthorizedFeatureArtifact,
+    AuthorizedFeatureMapping,
+    audit_authorized_json_features,
+    load_authorized_json_features,
+)
 
 __all__ = [
     "AdapterRegistry",
+    "AUTHORIZED_FEATURE_KIND",
+    "AUTHORIZED_FEATURE_VERSION",
     "AuditFinding",
     "AuditReport",
+    "ArtifactAuditIssue",
+    "ArtifactAuditReport",
+    "AuthorizedFeatureArtifact",
+    "AuthorizedFeatureMapping",
     "Brain2QwertyDiscoveryAdapter",
     "ChannelNormalizer",
     "DatasetAdapter",
@@ -133,6 +149,7 @@ __all__ = [
     "ZuCoPrecomputedFeatureAdapter",
     "ZuCoTaskInventory",
     "audit_splits",
+    "audit_authorized_json_features",
     "build_prepared_artifact_manifest",
     "build_split_plan",
     "collate_tensor_backed_samples",
@@ -141,6 +158,7 @@ __all__ = [
     "load_manifest",
     "load_dataset_card",
     "load_json_tensor_samples",
+    "load_authorized_json_features",
     "load_prepared_artifact_manifest",
     "load_train_text_tokenizer",
     "tensor_checksum",
