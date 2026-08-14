@@ -31,6 +31,7 @@ from .reproduction_card import (
     read_reproduction_card,
     write_reproduction_card,
 )
+from .multiseed import MULTISEED_VERSION, MultiSeedAggregate, MultiSeedBenchmarkPlan, SeedExpectation, SeedMetricResult, aggregate_multi_seed
 
 __all__ = [
     "PROVENANCE_REPORT_VERSION", "ArtifactBinding", "InformationAccessContract", "ModelCardArtifact",
@@ -40,4 +41,5 @@ __all__ = [
     "compute_model_card_reference_bindings", "generate_model_card", "read_provenance_report",
     "read_reproduction_card", "validate_model_card_references", "write_model_card", "write_provenance_report",
     "write_reproduction_card",
+    "MULTISEED_VERSION", "MultiSeedAggregate", "MultiSeedBenchmarkPlan", "SeedExpectation", "SeedMetricResult", "aggregate_multi_seed",
 ]
