@@ -20,6 +20,11 @@ from .candidate_ranking import (
 )
 from .bottleneck import NeuralRepresentationBottleneck, NeuralRepresentationBottleneckOutput
 from .decoder import DecoderGenerationConfig, DecoderTrainingOutput, TargetFreeAutoregressiveDecoder
+from .distillation import (
+    ReducedChannelDistillationConfig,
+    ReducedChannelDistillationLoss,
+    ReducedChannelDistillationOutput,
+)
 from .encoder import ContinuousNeuralEncoder
 from .factory import (
     NeuralToTextModelConfig,
@@ -80,6 +85,9 @@ __all__ = [
     "ResidualVectorQuantizer",
     "ResidualVectorQuantizerConfig",
     "ResidualVectorQuantizerOutput",
+    "ReducedChannelDistillationConfig",
+    "ReducedChannelDistillationLoss",
+    "ReducedChannelDistillationOutput",
     "SubjectAdapter",
     "SubjectAdapterMode",
     "SemanticPoolingOutput",
