@@ -45,6 +45,11 @@ from .factorized_scoring import (
     ValidationFittedScoreWeights,
     fit_factorized_score_weights,
 )
+from .foundation_wrapper import (
+    FoundationEncoderWrapper,
+    FoundationFeatureContract,
+    FoundationPretrainingProvenance,
+)
 from .heads import (
     CTCProductionHead,
     CTCProductionOutput,
@@ -108,6 +113,9 @@ __all__ = [
     "EvidenceFactorizedCandidateScorer",
     "FactorizedCandidateScoringOutput",
     "FactorizedScoringControl",
+    "FoundationEncoderWrapper",
+    "FoundationFeatureContract",
+    "FoundationPretrainingProvenance",
     "GroupAwareSymmetricInfoNCE",
     "GraphMontageAdapter",
     "GRUNeuralEncoder",
