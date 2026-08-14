@@ -88,6 +88,7 @@ ott evaluate compare-controls --run /path/to/run \
 
 # Synthetic package smoke path
 python examples/synthetic_workflow.py
+python examples/synthetic_experiment.py
 ```
 
 ## Documentation
