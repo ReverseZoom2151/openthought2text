@@ -17,6 +17,9 @@ from openthought2text.data import (
     validate_dataset_card,
     SplitProtocol,
     SyntheticNeuralTextAdapter,
+    ZuCoDiscoveryAdapter,
+    Brain2QwertyDiscoveryAdapter,
+    T15DiscoveryAdapter,
     audit_splits,
     build_split_plan,
     collate_tensor_backed_samples,
@@ -113,6 +116,9 @@ def build_parser() -> argparse.ArgumentParser:
 def _registry() -> AdapterRegistry:
     registry = AdapterRegistry()
     registry.register("synthetic", SyntheticNeuralTextAdapter)
+    registry.register("zuco_discovery", ZuCoDiscoveryAdapter)
+    registry.register("brain2qwerty_discovery", Brain2QwertyDiscoveryAdapter)
+    registry.register("t15_discovery", T15DiscoveryAdapter)
     return registry
 
 
@@ -160,14 +166,19 @@ def _run_data(args: argparse.Namespace) -> int:
                "artifact": str(args.root / "synthetic_manifest.jsonl")})
         return 0
     if args.data_command == "validate":
-        if not isinstance(adapter, SyntheticNeuralTextAdapter):
-            raise ValueError("the selected adapter does not implement local validation yet")
         report = adapter.validate(source)
-        _emit({"passed": report.passed, "sample_count": len(report.manifest.samples),
-               "finding_codes": [finding.code for finding in report.split_audit.findings],
-               "missing_signal_files": [str(path) for path in report.missing_signal_files],
-               "invalid_signal_files": [str(path) for path in report.invalid_signal_files]})
-        return 0
+        if isinstance(adapter, SyntheticNeuralTextAdapter):
+            _emit({"passed": report.passed, "sample_count": len(report.manifest.samples),
+                   "finding_codes": [finding.code for finding in report.split_audit.findings],
+                   "missing_signal_files": [str(path) for path in report.missing_signal_files],
+                   "invalid_signal_files": [str(path) for path in report.invalid_signal_files]})
+        else:
+            issues = getattr(report, "issues", ())
+            _emit({"passed": bool(getattr(report, "passed", False)),
+                   "issues": [{"code": item.code, "message": item.message,
+                               "path": None if getattr(item, "path", None) is None else str(item.path)}
+                              for item in issues]})
+        return 0 if report.passed else 1
     raise ValueError(f"unsupported data command: {args.data_command}")
 
 

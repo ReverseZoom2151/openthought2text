@@ -75,8 +75,10 @@ Useful commands:
 
 ```bash
 # Dataset and split entry points
-ott data discover --dataset zuco_v1 --root /path/to/zuco
-ott data validate --dataset zuco_v1 --root /path/to/zuco
+# Inventory only: validates the local ZuCo directory layout without parsing
+# participant recordings. Use an authorized converter before preparation.
+ott data discover --dataset zuco_discovery --root /path/to/zuco
+ott data validate --dataset zuco_discovery --root /path/to/zuco
 ott data card-validate --card /path/to/dataset_card.json
 ott splits audit --artifact /path/to/artifact --protocol loso_subject_unique_text
 ott splits build --manifest /path/to/source.jsonl --output /path/to/derived.jsonl \

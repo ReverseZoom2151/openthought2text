@@ -89,3 +89,8 @@ def test_cli_preflight_audit_rejects_invalid_metadata_without_opening_signals(tm
     invalid = tmp_path / "preflight.json"
     invalid.write_text("{}", encoding="utf-8")
     assert main(["data", "preflight-audit", "--plan", str(invalid)]) == 1
+
+
+def test_cli_exposes_inventory_only_zuco_validation_without_participant_parsing(tmp_path) -> None:
+    missing = tmp_path / "not-a-zuco-layout"
+    assert main(["data", "validate", "--dataset", "zuco_discovery", "--root", str(missing)]) == 1
