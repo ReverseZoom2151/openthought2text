@@ -25,6 +25,11 @@ from .distillation import (
     ReducedChannelDistillationLoss,
     ReducedChannelDistillationOutput,
 )
+from .domain_adversarial import (
+    CrossSubjectAdversarialOutput,
+    CrossSubjectDomainAdversary,
+    gradient_reverse,
+)
 from .encoder import ContinuousNeuralEncoder
 from .factory import (
     NeuralToTextModelConfig,
@@ -68,6 +73,8 @@ __all__ = [
     "CandidateRankingTrainingOutput",
     "CheckpointArchitectureCompatibility",
     "ContrastiveAlignmentOutput",
+    "CrossSubjectAdversarialOutput",
+    "CrossSubjectDomainAdversary",
     "ContinuousNeuralEncoder",
     "CoordinateChannelMerger",
     "CTCProductionHead",
@@ -111,6 +118,7 @@ __all__ = [
     "checkpoint_architecture_metadata",
     "describe_model_architecture",
     "greedy_ctc_decode",
+    "gradient_reverse",
     "select_mask_positions",
     "validate_checkpoint_architecture",
 ]
