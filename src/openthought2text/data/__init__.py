@@ -17,6 +17,13 @@ from .schema import (
     TimeInterval,
 )
 from .synthetic import SyntheticNeuralTextAdapter, SyntheticValidationReport
+from .zuco import (
+    ZuCoDiscoveryAdapter,
+    ZuCoDiscoveryReport,
+    ZuCoLayoutIssue,
+    ZuCoLayoutSeverity,
+    ZuCoTaskInventory,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -33,6 +40,11 @@ __all__ = [
     "TimeInterval",
     "SyntheticNeuralTextAdapter",
     "SyntheticValidationReport",
+    "ZuCoDiscoveryAdapter",
+    "ZuCoDiscoveryReport",
+    "ZuCoLayoutIssue",
+    "ZuCoLayoutSeverity",
+    "ZuCoTaskInventory",
     "audit_splits",
     "load_manifest",
     "write_manifest",
