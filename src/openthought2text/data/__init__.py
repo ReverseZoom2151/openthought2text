@@ -40,6 +40,12 @@ from .zuco import (
     ZuCoLayoutSeverity,
     ZuCoTaskInventory,
 )
+from .zuco_precomputed import (
+    ZuCoFeatureArtifactReport,
+    ZuCoFeatureIssue,
+    ZuCoFeatureSeverity,
+    ZuCoPrecomputedFeatureAdapter,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -64,8 +70,12 @@ __all__ = [
     "VariableLengthTensorDataset",
     "ZuCoDiscoveryAdapter",
     "ZuCoDiscoveryReport",
+    "ZuCoFeatureArtifactReport",
+    "ZuCoFeatureIssue",
+    "ZuCoFeatureSeverity",
     "ZuCoLayoutIssue",
     "ZuCoLayoutSeverity",
+    "ZuCoPrecomputedFeatureAdapter",
     "ZuCoTaskInventory",
     "audit_splits",
     "build_prepared_artifact_manifest",
