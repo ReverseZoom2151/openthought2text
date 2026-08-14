@@ -60,6 +60,10 @@ from .factory import (
     build_neural_to_text_model,
     describe_model_architecture,
 )
+from .foundation_manifest import (
+    FoundationManifestCompatibility,
+    validate_foundation_checkpoint_manifest,
+)
 from .foundation_wrapper import (
     FoundationEncoderWrapper,
     FoundationFeatureContract,
@@ -157,6 +161,8 @@ __all__ = [
     "FoundationEncoderWrapper",
     "FoundationFeatureContract",
     "FoundationPretrainingProvenance",
+    "FoundationManifestCompatibility",
+    "validate_foundation_checkpoint_manifest",
     "GroupAwareSymmetricInfoNCE",
     "GraphMontageAdapter",
     "BalancedTaskSchedule",
