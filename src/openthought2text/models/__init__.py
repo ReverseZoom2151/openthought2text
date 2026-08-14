@@ -58,6 +58,12 @@ from .residual_quantizer import (
     ResidualVectorQuantizerConfig,
     ResidualVectorQuantizerOutput,
 )
+from .self_supervision import (
+    NeuralReconstructionConsistencyObjective,
+    NeuralReconstructionHead,
+    NeuralSelfSupervisionConfig,
+    NeuralSelfSupervisionOutput,
+)
 from .subject import SubjectAdapter, SubjectAdapterMode
 from .tokenizer import (
     CodebookHealth,
@@ -104,6 +110,10 @@ __all__ = [
     "NeuralToTextTrainingOutput",
     "NeuralRepresentationBottleneck",
     "NeuralRepresentationBottleneckOutput",
+    "NeuralReconstructionConsistencyObjective",
+    "NeuralReconstructionHead",
+    "NeuralSelfSupervisionConfig",
+    "NeuralSelfSupervisionOutput",
     "NeuralVectorQuantizer",
     "MaskedCandidateRankingLoss",
     "MaskedNeuralTokenConfig",
