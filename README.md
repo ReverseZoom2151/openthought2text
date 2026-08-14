@@ -89,6 +89,11 @@ ott evaluate compare-controls --run /path/to/run \
 # Synthetic package smoke path
 python examples/synthetic_workflow.py
 python examples/synthetic_experiment.py
+
+# Reproducible synthetic run artifacts (checkpoint, tokenizer, normalizer,
+# and target-free test predictions). The output directory must not exist.
+ott data prepare --dataset synthetic --root /tmp/ott-synthetic
+ott train synthetic --root /tmp/ott-synthetic --output /tmp/ott-synthetic-run
 ```
 
 ## Documentation
