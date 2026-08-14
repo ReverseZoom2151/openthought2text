@@ -12,7 +12,12 @@ from .alignment import (
     SemanticPoolingOutput,
     SemanticQueryPooler,
 )
-from .candidate_ranking import CandidateRankingOutput, EvidenceGroundedCandidateRanker
+from .candidate_ranking import (
+    CandidateRankingOutput,
+    CandidateRankingTrainingOutput,
+    EvidenceGroundedCandidateRanker,
+    MaskedCandidateRankingLoss,
+)
 from .bottleneck import NeuralRepresentationBottleneck, NeuralRepresentationBottleneckOutput
 from .decoder import DecoderGenerationConfig, DecoderTrainingOutput, TargetFreeAutoregressiveDecoder
 from .encoder import ContinuousNeuralEncoder
@@ -49,6 +54,7 @@ from .types import NeuralEncoderOutput, TokenTiming
 __all__ = [
     "CodebookHealth",
     "CandidateRankingOutput",
+    "CandidateRankingTrainingOutput",
     "CheckpointArchitectureCompatibility",
     "ContrastiveAlignmentOutput",
     "ContinuousNeuralEncoder",
@@ -70,6 +76,7 @@ __all__ = [
     "NeuralRepresentationBottleneck",
     "NeuralRepresentationBottleneckOutput",
     "NeuralVectorQuantizer",
+    "MaskedCandidateRankingLoss",
     "ResidualVectorQuantizer",
     "ResidualVectorQuantizerConfig",
     "ResidualVectorQuantizerOutput",

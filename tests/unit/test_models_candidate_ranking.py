@@ -56,3 +56,38 @@ def test_candidate_ranker_validates_authorized_candidate_shapes_and_masks():
         ranker(neural, mask, torch.tensor([-1, 2]), candidates)
     with pytest.raises(ValueError, match="at least one"):
         ranker(neural, mask, torch.tensor([1, 2]), candidates, torch.tensor([False, False]))
+
+
+def test_candidate_ranking_training_loss_validates_authorized_positive_and_backpropagates():
+    torch.manual_seed(16)
+    ranker = _ranker()
+    neural = torch.randn(2, 3, 8, requires_grad=True)
+    ranking = ranker(
+        neural,
+        torch.ones(2, 3, dtype=torch.bool),
+        torch.tensor([10, 20, 30]),
+        torch.randn(3, 5),
+        torch.tensor([[True, False, True], [True, True, False]]),
+    )
+    output = ranker.training_loss(ranking, torch.tensor([2, 1]))
+    assert output.positive_candidate_positions.tolist() == [2, 1]
+    assert output.valid_candidate_counts.tolist() == [2, 2]
+    assert torch.isfinite(output.loss)
+    output.loss.backward()
+    assert neural.grad is not None and neural.grad.abs().sum() > 0
+    with pytest.raises(ValueError, match="unavailable"):
+        ranker.training_loss(ranking, torch.tensor([1, 0]))
+
+
+def test_candidate_ranking_training_loss_rejects_invalid_positive_positions():
+    ranker = _ranker()
+    ranking = ranker(
+        torch.randn(1, 2, 8),
+        torch.ones(1, 2, dtype=torch.bool),
+        torch.tensor([1, 2]),
+        torch.randn(2, 5),
+    )
+    with pytest.raises(ValueError, match="index"):
+        ranker.training_loss(ranking, torch.tensor([2]))
+    with pytest.raises(ValueError, match="integer"):
+        ranker.training_loss(ranking, torch.tensor([0.0]))

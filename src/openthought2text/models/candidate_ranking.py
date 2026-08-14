@@ -28,6 +28,51 @@ class CandidateRankingOutput:
         return self.candidate_ids.gather(1, self.scores.argsort(dim=1, descending=True))
 
 
+@dataclass(frozen=True)
+class CandidateRankingTrainingOutput:
+    """Training loss and the authorized positive positions it supervised."""
+
+    loss: torch.Tensor
+    positive_candidate_positions: torch.Tensor
+    positive_scores: torch.Tensor
+    valid_candidate_counts: torch.Tensor
+
+
+class MaskedCandidateRankingLoss(nn.Module):
+    """Cross-entropy over only an explicit ranker's authorized candidate set."""
+
+    def forward(
+        self,
+        ranking: CandidateRankingOutput,
+        positive_candidate_positions: torch.Tensor,
+    ) -> CandidateRankingTrainingOutput:
+        if positive_candidate_positions.ndim != 1 or positive_candidate_positions.shape[0] != ranking.scores.shape[0]:
+            raise ValueError("positive_candidate_positions must be [batch]")
+        if positive_candidate_positions.dtype not in (
+            torch.int8,
+            torch.int16,
+            torch.int32,
+            torch.int64,
+            torch.uint8,
+        ):
+            raise ValueError("positive_candidate_positions must have an integer dtype")
+        positions = positive_candidate_positions.to(device=ranking.scores.device, dtype=torch.long)
+        candidates = ranking.scores.shape[1]
+        if (positions < 0).any() or (positions >= candidates).any():
+            raise ValueError("positive_candidate_positions must index the candidate set")
+        positive_available = ranking.candidate_mask.gather(1, positions.unsqueeze(1)).squeeze(1)
+        if not positive_available.all():
+            bad_rows = (~positive_available).nonzero(as_tuple=False).squeeze(1).tolist()
+            raise ValueError(f"positive candidate is unavailable for batch rows {bad_rows}")
+        loss = F.cross_entropy(ranking.scores, positions)
+        return CandidateRankingTrainingOutput(
+            loss=loss,
+            positive_candidate_positions=positions,
+            positive_scores=ranking.scores.gather(1, positions.unsqueeze(1)).squeeze(1),
+            valid_candidate_counts=ranking.candidate_mask.sum(dim=1, dtype=torch.long),
+        )
+
+
 class EvidenceGroundedCandidateRanker(nn.Module):
     """Rank only caller-authorized candidates from masked neural features.
 
@@ -54,6 +99,7 @@ class EvidenceGroundedCandidateRanker(nn.Module):
         self.temperature = temperature
         self.pooler = SemanticQueryPooler(hidden_size, num_queries=num_queries, num_heads=num_heads)
         self.evidence_projection = nn.Linear(hidden_size, candidate_embedding_dim, bias=False)
+        self.training_criterion = MaskedCandidateRankingLoss()
 
     @staticmethod
     def _expand_candidates(
@@ -116,3 +162,11 @@ class EvidenceGroundedCandidateRanker(nn.Module):
             query_features=pooled.query_features,
             attention_weights=pooled.attention_weights,
         )
+
+    def training_loss(
+        self,
+        ranking: CandidateRankingOutput,
+        positive_candidate_positions: torch.Tensor,
+    ) -> CandidateRankingTrainingOutput:
+        """Training-only supervision; ``forward`` remains target-free inference."""
+        return self.training_criterion(ranking, positive_candidate_positions)
