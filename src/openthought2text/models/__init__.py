@@ -7,6 +7,7 @@ from .alignment import (
     SemanticPoolingOutput,
     SemanticQueryPooler,
 )
+from .candidate_ranking import CandidateRankingOutput, EvidenceGroundedCandidateRanker
 from .decoder import DecoderGenerationConfig, DecoderTrainingOutput, TargetFreeAutoregressiveDecoder
 from .encoder import ContinuousNeuralEncoder
 from .heads import (
@@ -35,6 +36,7 @@ from .types import NeuralEncoderOutput, TokenTiming
 
 __all__ = [
     "CodebookHealth",
+    "CandidateRankingOutput",
     "ContrastiveAlignmentOutput",
     "ContinuousNeuralEncoder",
     "CoordinateChannelMerger",
@@ -42,6 +44,7 @@ __all__ = [
     "CTCProductionOutput",
     "DecoderGenerationConfig",
     "DecoderTrainingOutput",
+    "EvidenceGroundedCandidateRanker",
     "GroupAwareSymmetricInfoNCE",
     "GraphMontageAdapter",
     "NeuralEncoderOutput",
