@@ -2,8 +2,9 @@
 
 ## Implemented offline foundations
 
-- Canonical data, manifest, adapter-registry, train-only normalization,
-  prepared-artifact, masked variable-length batching, and split-audit contracts.
+- Canonical data, manifest, adapter-registry, train-only normalization and
+  vocabulary artifacts, portable JSON-signal loading, prepared-artifact,
+  masked variable-length batching, and split-audit contracts.
 - Synthetic end-to-end data preparation/validation and safe discovery contracts
   for raw-layout and precomputed-feature ZuCo artifacts.
 - Continuous encoder, coordinate-aware and graph montage adapters, subject
@@ -12,7 +13,12 @@
 - Text/retrieval metric primitives, target-free inference audits, neural
   grounding controls, faithfulness suites, bootstrap/permutation statistics,
   channel/time occlusion, saved predictions, and evaluation reports.
-- Supervised train-step and checkpoint-provenance utilities.
+- Config-validated model factory, auditable residual bottleneck, constrained
+  candidate ranker, supervised epoch runner, checkpoint compatibility checks,
+  target-free token-prediction serialization, hash-bound provenance, release
+  gate, and evidence-backed model-card artifacts.
+- A regression-tested synthetic trace spanning generated signals, train-only
+  fitting, training, target-free held-out generation, and checkpoint creation.
 
 ## Not yet validated experimentally
 
