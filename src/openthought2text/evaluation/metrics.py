@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from collections import Counter
+import math
 import re
 import unicodedata
 
@@ -92,6 +94,113 @@ def corpus_character_error_rate(references: Iterable[str], hypotheses: Iterable[
 
 def corpus_word_error_rate(references: Iterable[str], hypotheses: Iterable[str]) -> ErrorRate:
     return _aggregate_error_rate(references, hypotheses, words)
+
+
+def corpus_bleu(
+    references: Iterable[str],
+    hypotheses: Iterable[str],
+    *,
+    max_order: int = 4,
+    tokenizer: callable = words,
+) -> float:
+    """Tokenization-explicit corpus BLEU with effective order and no smoothing.
+
+    Effective order avoids assigning a perfect one-token corpus a zero score merely
+    because it has no 2- through 4-grams. Empty hypotheses score zero; paired empty
+    texts do not create artificial BLEU evidence.
+    """
+    refs, hyps = _paired_texts(references, hypotheses)
+    if max_order <= 0:
+        raise ValueError("max_order must be positive")
+    matches = [0] * max_order
+    totals = [0] * max_order
+    reference_length = hypothesis_length = 0
+    for reference, hypothesis in zip(refs, hyps, strict=True):
+        ref_tokens, hyp_tokens = list(tokenizer(reference)), list(tokenizer(hypothesis))
+        reference_length += len(ref_tokens)
+        hypothesis_length += len(hyp_tokens)
+        for order in range(1, max_order + 1):
+            hyp_counts = _ngrams(hyp_tokens, order)
+            ref_counts = _ngrams(ref_tokens, order)
+            totals[order - 1] += sum(hyp_counts.values())
+            matches[order - 1] += sum(min(count, ref_counts[gram]) for gram, count in hyp_counts.items())
+    active = [index for index, total in enumerate(totals) if total]
+    if hypothesis_length == 0 or not active or any(matches[index] == 0 for index in active):
+        return 0.0
+    log_precision = sum(math.log(matches[index] / totals[index]) for index in active) / len(active)
+    brevity_penalty = 1.0 if hypothesis_length > reference_length else math.exp(1 - reference_length / hypothesis_length)
+    return brevity_penalty * math.exp(log_precision)
+
+
+def corpus_rouge_l(
+    references: Iterable[str], hypotheses: Iterable[str], *, tokenizer: callable = words
+) -> float:
+    """Macro-average token LCS F1 (ROUGE-L style), with paired-empty score one."""
+    refs, hyps = _paired_texts(references, hypotheses)
+    scores = [_rouge_l_tokens(list(tokenizer(reference)), list(tokenizer(hypothesis))) for reference, hypothesis in zip(refs, hyps, strict=True)]
+    return sum(scores) / len(scores)
+
+
+def corpus_meteor_unigram_approx(
+    references: Iterable[str], hypotheses: Iterable[str], *, tokenizer: callable = words
+) -> float:
+    """Macro-average exact-unigram METEOR-style score, not the official METEOR.
+
+    It uses greedy one-to-one exact matching and the common harmonic/fragmentation
+    form. It deliberately omits stemming, synonym matching, and language resources.
+    """
+    refs, hyps = _paired_texts(references, hypotheses)
+    scores = [_meteor_unigram_tokens(list(tokenizer(reference)), list(tokenizer(hypothesis))) for reference, hypothesis in zip(refs, hyps, strict=True)]
+    return sum(scores) / len(scores)
+
+
+def _paired_texts(references: Iterable[str], hypotheses: Iterable[str]) -> tuple[list[str], list[str]]:
+    refs, hyps = list(references), list(hypotheses)
+    if not refs or len(refs) != len(hyps):
+        raise ValueError("references and hypotheses must be non-empty and equally sized")
+    return refs, hyps
+
+
+def _ngrams(tokens: Sequence[str], order: int) -> Counter[tuple[str, ...]]:
+    return Counter(tuple(tokens[index:index + order]) for index in range(max(0, len(tokens) - order + 1)))
+
+
+def _rouge_l_tokens(reference: Sequence[str], hypothesis: Sequence[str]) -> float:
+    if not reference and not hypothesis:
+        return 1.0
+    if not reference or not hypothesis:
+        return 0.0
+    previous = [0] * (len(hypothesis) + 1)
+    for reference_token in reference:
+        current = [0]
+        for index, hypothesis_token in enumerate(hypothesis, start=1):
+            current.append(previous[index - 1] + 1 if reference_token == hypothesis_token else max(previous[index], current[index - 1]))
+        previous = current
+    lcs = previous[-1]
+    precision, recall = lcs / len(hypothesis), lcs / len(reference)
+    return 2 * precision * recall / (precision + recall)
+
+
+def _meteor_unigram_tokens(reference: Sequence[str], hypothesis: Sequence[str]) -> float:
+    if not reference and not hypothesis:
+        return 1.0
+    if not reference or not hypothesis:
+        return 0.0
+    used_reference: set[int] = set()
+    matches: list[tuple[int, int]] = []
+    for hypothesis_index, token in enumerate(hypothesis):
+        match = next((index for index, reference_token in enumerate(reference) if index not in used_reference and reference_token == token), None)
+        if match is not None:
+            used_reference.add(match)
+            matches.append((hypothesis_index, match))
+    count = len(matches)
+    if count == 0:
+        return 0.0
+    precision, recall = count / len(hypothesis), count / len(reference)
+    harmonic = 10 * precision * recall / (recall + 9 * precision)
+    chunks = 1 + sum(current[0] != previous[0] + 1 or current[1] != previous[1] + 1 for previous, current in zip(matches, matches[1:]))
+    penalty = 0.5 * (chunks / count) ** 3
+    return harmonic * (1 - penalty)
 
 
 @dataclass(frozen=True)
