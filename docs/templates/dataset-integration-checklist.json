@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenThought2Text dataset integration checklist",
+  "description": "Metadata-only contributor checklist. It must not reference or include participant data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataset_id",
+    "integration_scope",
+    "participant_data_committed",
+    "dataset_card",
+    "authorized_release_bundle",
+    "preflight_plan",
+    "information_access",
+    "split_audit",
+    "test_hooks"
+  ],
+  "properties": {
+    "dataset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "integration_scope": {
+      "type": "string",
+      "enum": ["discovery_only", "authorized_precomputed_features", "synthetic_fixture"]
+    },
+    "participant_data_committed": {
+      "const": false,
+      "description": "Raw recordings, participant metadata, access tokens, and restricted payloads are prohibited."
+    },
+    "dataset_card": {
+      "$ref": "#/$defs/required_artifact"
+    },
+    "authorized_release_bundle": {
+      "$ref": "#/$defs/required_artifact"
+    },
+    "preflight_plan": {
+      "$ref": "#/$defs/required_artifact"
+    },
+    "information_access": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["declared", "inference_target_text", "inference_text_context", "alignment_source"],
+      "properties": {
+        "declared": {"const": true},
+        "inference_target_text": {"const": false},
+        "inference_text_context": {"const": false},
+        "alignment_source": {"type": "string", "minLength": 1}
+      }
+    },
+    "split_audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "plan_validated", "leakage_audit_passed"],
+      "properties": {
+        "protocol": {
+          "enum": ["random_legacy", "unique_text", "session_holdout", "loso_subject", "loso_subject_unique_text"]
+        },
+        "plan_validated": {"const": true},
+        "leakage_audit_passed": {"const": true}
+      }
+    },
+    "test_hooks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["focused_test", "full_data_suite", "no_participant_fixture"],
+      "properties": {
+        "focused_test": {"type": "string", "pattern": "^tests/unit/test_data_.*\\.py$"},
+        "full_data_suite": {"const": "python -m pytest tests/unit/test_data*.py -q"},
+        "no_participant_fixture": {"const": true}
+      }
+    }
+  },
+  "$defs": {
+    "required_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "checksum_validated"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "checksum_validated": {"const": true}
+      }
+    }
+  }
+}
