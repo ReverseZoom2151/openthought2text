@@ -117,6 +117,13 @@ from .continuous_chunks import (
     ContinuousChunkView,
     build_continuous_chunk_view,
 )
+from .sensor_layout import (
+    SensorDefinition,
+    SensorLayout,
+    SensorLayoutTensor,
+    SensorType,
+    sensor_layout_to_tensor,
+)
 
 __all__ = [
     "AdapterRegistry",
@@ -157,6 +164,10 @@ __all__ = [
     "ReleaseBundleIssue",
     "SignalReference",
     "SIGNAL_TIMELINE_ALIGNMENT",
+    "SensorDefinition",
+    "SensorLayout",
+    "SensorLayoutTensor",
+    "SensorType",
     "SplitPlan",
     "SplitProtocol",
     "SplitValidationReport",
@@ -205,6 +216,7 @@ __all__ = [
     "tokenize_text",
     "select_split_samples",
     "select_named_montage",
+    "sensor_layout_to_tensor",
     "write_manifest",
     "write_dataset_card",
     "write_dataset_release_bundle",
