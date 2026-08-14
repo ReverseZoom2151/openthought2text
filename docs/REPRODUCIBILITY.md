@@ -34,5 +34,15 @@ what was visible at inference. Its `binding_sha256` is recomputed when loaded;
 missing, placeholder, or altered bindings are rejected. This report is a
 necessary traceability record, not evidence that a model is accurate.
 
+## Real-data disclosure gate
+
+Before a real dataset enters a benchmark workflow, create and validate a
+checksummed JSON `DatasetCard`. It must disclose source, license, consent,
+access terms, modality, split protocol, and preprocessing. YAML and informal
+notes are intentionally not accepted as card artifacts, because they cannot be
+bound consistently into the run record. The synthetic fixture is exempt from
+participant disclosure only because its card explicitly says that it contains
+no participant data.
+
 The CI/test path has no participant-data dependency. Real dataset preparation
 and model training are explicit opt-in operations.
