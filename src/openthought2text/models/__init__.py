@@ -11,6 +11,12 @@ from .candidate_ranking import CandidateRankingOutput, EvidenceGroundedCandidate
 from .bottleneck import NeuralRepresentationBottleneck, NeuralRepresentationBottleneckOutput
 from .decoder import DecoderGenerationConfig, DecoderTrainingOutput, TargetFreeAutoregressiveDecoder
 from .encoder import ContinuousNeuralEncoder
+from .factory import (
+    NeuralToTextModelConfig,
+    architecture_fingerprint,
+    build_neural_to_text_model,
+    describe_model_architecture,
+)
 from .heads import (
     CTCProductionHead,
     CTCProductionOutput,
@@ -53,6 +59,7 @@ __all__ = [
     "NeuralTokenizerOutput",
     "NeuralToTextGenerationOutput",
     "NeuralToTextModel",
+    "NeuralToTextModelConfig",
     "NeuralToTextTrainingOutput",
     "NeuralRepresentationBottleneck",
     "NeuralRepresentationBottleneckOutput",
@@ -68,6 +75,9 @@ __all__ = [
     "SemanticAnchorOutput",
     "TargetFreeAutoregressiveDecoder",
     "TokenTiming",
+    "architecture_fingerprint",
+    "build_neural_to_text_model",
     "codebook_health",
+    "describe_model_architecture",
     "greedy_ctc_decode",
 ]
