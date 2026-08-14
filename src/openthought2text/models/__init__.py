@@ -65,6 +65,13 @@ from .tokenizer import (
     NeuralVectorQuantizer,
     codebook_health,
 )
+from .torchscript_export import (
+    TORCHSCRIPT_SCOPE_NEURAL_ENCODER_EVIDENCE,
+    NeuralEncoderEvidenceTorchScriptAdapter,
+    TorchScriptExportValidation,
+    export_neural_encoder_evidence_torchscript,
+    validate_neural_encoder_evidence_torchscript,
+)
 from .types import NeuralEncoderOutput, TokenTiming
 
 __all__ = [
@@ -111,14 +118,19 @@ __all__ = [
     "SemanticAnchorHead",
     "SemanticAnchorOutput",
     "TargetFreeAutoregressiveDecoder",
+    "TORCHSCRIPT_SCOPE_NEURAL_ENCODER_EVIDENCE",
     "TokenTiming",
+    "TorchScriptExportValidation",
     "architecture_fingerprint",
     "build_neural_to_text_model",
     "codebook_health",
     "checkpoint_architecture_metadata",
     "describe_model_architecture",
+    "export_neural_encoder_evidence_torchscript",
     "greedy_ctc_decode",
     "gradient_reverse",
     "select_mask_positions",
+    "NeuralEncoderEvidenceTorchScriptAdapter",
+    "validate_neural_encoder_evidence_torchscript",
     "validate_checkpoint_architecture",
 ]
